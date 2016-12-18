@@ -1,0 +1,27 @@
+delete运算符可以用来删除对象的属性。如果对象包含该属性，那么该属性就会被删除，它不会触及原型链中的任何对象。
+
+var p = {
+    "term" : 1,
+    "year" : "2014-2015"
+};
+delete p.term;
+delete p.year;
+console.log(p.term);  //undefined 不存在则返回undefined
+console.log(p.year);  //undefined 
+
+但是，删除对象的属性可能会让来自原型链中的属性透现出来：
+
+var A = {
+   "term" : 1
+}
+var p = {
+    "term" : 1,
+    "year" : "2014-2015"
+};
+var B = function(){};
+B.prototype = A;
+p = new B();
+delete p.term;
+delete p.year;
+console.log(p.term);  // 1        暴露了原形链中的属性
+console.log(p.year);  //undefined 不存在则返回undefined
