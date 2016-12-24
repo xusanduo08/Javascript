@@ -8,8 +8,9 @@
 > Object.prototype.toString.call(arr);//"[object Array]"
 > ```
 >
-> 针对以上只是，看下面一个题目：
+> 针对以上知识，看下面一个题目：
 >
 > `({}) == '[object Object]'  	//true`
 >
 > 首先，上面的表达式在进行比较时会进行类型转化，这部分可以看[这里](http://javascript.ruanyifeng.com/grammar/conversion.html)和[这里](http://www.haorooms.com/post/js_yinxingleixing)，一个对象转换成字符串调用自身的`toString`方法，由于在不重写的`toString`方法的情况下该方法的返回值是`'[object Object]'`，所以说，这题最后比较的就是`'[object Object] == [object Object]'`，所以比较的结果就是`true`。
+
