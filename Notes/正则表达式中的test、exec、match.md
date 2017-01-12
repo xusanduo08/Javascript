@@ -33,7 +33,7 @@
 
 ### 正则匹配的过程
 
-```
+```javascript
 regex.test('1234567891234');//false
 regex.test('1234567a');//true
 ```
@@ -60,3 +60,91 @@ http://xz.jb51.net:81/201101/books/jtregex3_jb51.7z 精通正则表达式
         3. 只能由字母和数字组成: [0-9A-Za-z]{8}
     	排除特殊符号的可能
     (?![a-zA-Z]+$)(?![0-9a-z]+$)[0-9A-Za-z]{8}
+### `match`和`exec`
+
+> `exec()`是正则对象的一个方法，而`match()`是字符串的一个方法
+
+#### `exec()`
+
+```
+exec():用给定的正则匹配指定的字符串，并返回包含查找结果的数组，返回的数组包含input和index属性。input包含被匹配的源字符串，index则声明匹配文本的第一个字符的位置；如果没有匹配到任何元素，则返回null。
+```
+
+`exec()`在匹配过程中，只会返回首次匹配到的结果，每次匹配结束后，会更新一下正则表达式的`lastIndex`属性，用于指向下次匹配开始时的位置。当正则表达式具有全局匹配时，看下面例子：
+
+```javascript
+var re=/\d{3}/g;
+var str="876jk367djf832k";
+var arr = re.exec(str);//["876"]
+re.lastIndex;//3
+arr.index;//0
+arr.input;//"876jk367djf832k"
+```
+
+此时，`lastIndex`指向索引为3的位置，说明下次匹配从索引为3的位置开始，继续匹配：
+
+```javascript
+re.exec(str);//["367"]
+re.lastIndex;//8
+arr.index;//5
+```
+
+从3位置开始匹配，满足的匹配为`"367"`，所以返回数组`["367"]`，同时更新`lastIndex`属性为8：
+
+```
+re.exec(str);//["832"]
+re.lastIndex;//14
+arr.index;//11
+```
+
+继续从8位置开始匹配，返回满足条件的匹配`["832"]`，并更新`lastIndex`属性为14，如果此时继续进行下一次匹配返回结果就是`null`，并且正则对象的`lastIndex`属性会被重置为0，然后循环上述过程。
+
+加入正则表达式没有全局匹配标识，`exec()`的每次返回结果都会是一样的：
+
+```javascript
+var re=/\d{3}/;
+var str="876jk367djf832k";
+re.exec(str);//["876"]
+re.exec(str);//["876"]
+re.exec(str);//["876"]
+```
+
+如果正则表达式中含有分组，也就是小括号`()`，并且没有全局标识，那么`exec()`返回的数组中，0位置为匹配到的元素，`1-n`为满足这些分组的子匹配，看下面例子：
+
+```javascript
+var re=/(\d)([a-z])/;
+var str="9d9g8e7m3b";
+var arr = re.exec(str);//["9d", "9", "d"]
+arr.index;//0
+arr.input;//"9d9g8e7m3b"
+```
+
+#### `match()`
+
+```javascript
+match()：用给定的正则表达式对字符串进行查找，如果没有匹配结果，则返回null，否则返回包含查找结果的数组。r如果正则对象包含全局标志g，则返回的数组包含2个属性：input、index。input属性包含被查找的源字符串，index属性包含匹配结果在字符串中的位置。
+```
+
+看例子：
+
+正则表达式有全局标识时，返回的结果数组不会再有`index`和`input`属性：
+
+```javascript
+var re=/(\d)([a-z])/g;
+var str="9d9g8e7m3b";
+var arr = str.match(re);//["9d", "9g", "8e", "7m", "3b"]
+arr.input;//undefined
+arr.index;//undefined
+```
+
+正则表达式无全局标识时，返回数组的第一个元素为匹配结果，剩下的元素为与正则表达式的子表达式相匹配的文本：
+
+```javascript
+var re=/(\d)([a-z])/;
+var str="9d9g8e7m3b";
+var arr = str.match(re);
+arr;//["9d", "9", "d"]
+arr.input;//"9d9g8e7m3b"
+arr.index;//0
+```
+
