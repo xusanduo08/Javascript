@@ -1,4 +1,4 @@
-```
+```javascript
 var fn = function(){};
 fn.prototype;	//Object{}
 fn.prototype.constructor;	//function (){}
