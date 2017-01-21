@@ -9,7 +9,7 @@
 
 ### 类式继承
 
-```
+```javascript
 //声明父类
 function SuperClass(){
   	this.superValue = true;
@@ -24,7 +24,7 @@ function SubClass(){
   	this.subVlaue = false;
 }
 
-//继承父类
+//继承父类，将父类的实例赋给子类的原型
 SubClass.prototype = new SuperClass();
 
 //为子类添加共有方法
@@ -36,6 +36,8 @@ var instance = new SubbClass();
 console.log(instance.getSuperValue());//true
 console.log(instance.getSubValue());//false
 ```
+
+其实类式继承说白就是：子类的原型指向的是父类的实例，或者`SubClass.prototype instanceof SuperClass == true `
 
 实例对象`instance`的原型链：
 
