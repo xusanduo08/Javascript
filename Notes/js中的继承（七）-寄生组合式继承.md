@@ -31,7 +31,7 @@ function inheritPrototype(subClass, superClass){
 
 测试用例：
 
-```
+```javascript
 //定义父类
 function SuperClass(name){
   	this.name = name;
