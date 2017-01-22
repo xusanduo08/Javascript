@@ -59,8 +59,8 @@ var instance1 = new SubClass("js book", 2014);
 var instance2 = new SubClass("css book", 2013);
 
 instance1.colors.push("black");
-console.log(instance1.colors);["red", "blue", "green", "black"];
-console.log(instance2.colors);["red", "blue", "green"];
+console.log(instance1.colors);//["red", "blue", "green", "black"];
+console.log(instance2.colors);//["red", "blue", "green"];
 instance2.getName();//css book
 instance2.getTime();//2013
 ```
