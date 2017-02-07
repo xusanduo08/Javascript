@@ -10,7 +10,7 @@ function inheritObject (o){
   	//过渡对象
   	function F(){};
   	//过渡对象的原型继承父对象
-  	F.prototype = 0;
+  	F.prototype = o;
   	//返回一个过渡对象的实例，该实例的原型继承了父对象
   	return new F();
 }
