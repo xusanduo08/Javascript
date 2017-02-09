@@ -36,5 +36,8 @@
 
 ​	[这篇文章](https://webkit.org/blog/1395/running-scripts-in-webkit/)总结了`defer`和`async`的相同点和区别：
 
-	>Both `async` and `defer` scripts begin to download immediately without pausing the parser and both support an optional onload handler to address the common need to perform initialization which depends on the script. The difference between `async` and `defer` centers around when the script is executed. Each `async` script executes at the first opportunity after it is finished downloading and before the window’s load event. This means it’s possible (and likely) that `async` scripts are not executed in the order in which they occur in the page. The `defer` scripts, on the other hand, are guaranteed to be executed in the order they occur in the page. That execution starts after parsing is completely finished, but before the document’s `DOMContentLoaded` event.
+>Both `async` and `defer` scripts begin to download immediately without pausing the parser and both support an optional onload handler to address the common need to perform initialization which depends on the script. The difference between `async` and `defer` centers around when the script is executed. Each `async` script executes at the first opportunity after it is finished downloading and before the window’s load event. This means it’s possible (and likely) that `async` scripts are not executed in the order in which they occur in the page. The `defer` scripts, on the other hand, are guaranteed to be executed in the order they occur in the page. That execution starts after parsing is completely finished, but before the document’s `DOMContentLoaded` event.
+
+
+
 
