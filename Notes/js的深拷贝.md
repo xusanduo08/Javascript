@@ -8,7 +8,7 @@ function deepCopy(source){
           	result[key] = source[key]
       	}
   	}
-  	
+  	return result;
 }
 ```
 
