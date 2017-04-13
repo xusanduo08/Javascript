@@ -2,10 +2,8 @@
 
 对象的属性分为数据属性和访问器属性，两者区别如下：
 
-* 数据属性：数据属性是可获取和设置值得属性
-* 访问器属性：只要设置或检索属性值，访问器属性就会调用用户提供的函数。访问器属性的描述符包含get特性和set特性。
-
-所以可以这么说，数据属性是可以直观的在数据上看到的，而访问器属性则不是，访问器属性只在设置或者检索属性值的时候才会起作用。
+* 数据属性：数据属性是可以直接使用点语法在对象上定义的属性。
+* 访问器属性：无法直接在对象上定义，必须使用JS提供的指定的方法才能定义。
 
 特性（attribute）主要用来描述对象属性（property）的各种特征。也就是说，特性不同于属性，特性是专门用来描述属性的。
 
@@ -24,5 +22,43 @@
 * [[Configurable]]：同上。
 
 
+所以，数据属性和访问器属性，两者区别主要在于：数据属性可直接在对象上使用点语法定义，访问器属性只能通过JS提供的`Object.defineProperty()`定义，另外，访问器属性具有[[setter]]和[[getter]]两个特性。
 
-未完。。。。。
+`Object.defineProperty()`:
+
+```javascript
+var person={name:"fansheng", age: 26};
+Object.defineProperty(person, "name",{
+  	configurable: true,
+  	enumerable: false,
+  	writable: false,
+  	value: "fansheng"
+})
+for(var  n in person){
+  console.log(n);//age; name属性的enumerable被设为false，则使用for...in无法遍历到
+}
+person.name = "dasheng";
+person.name;//fansheng；name属性的writable设为false，表示该属性值不可写
+```
+
+如果属性的`configurable`特性设置为`false`，则表示该属性不可被删除，其自身的其他特性也不可修改，并且一旦`configurable`设为`false`，将不可再更改为`true`。
+
+```javascript
+Object.defineProperty(person, "age",{
+  	configurable: false,
+  	enumerable: false,
+  	writable: false,
+  	value: "fansheng"
+})
+
+//尝试重新定义configurable特性
+Object.defineProperty(person, "age",{
+  	configurable: true //报错：Uncaught TypeError: Cannot redefine property: age
+})
+
+```
+
+
+
+  
+
