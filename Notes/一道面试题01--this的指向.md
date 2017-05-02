@@ -1,6 +1,6 @@
 直接上题目：
 
-```
+```javascript
 var length = 10;
 function fn(){
   console.log(this.length);
@@ -36,4 +36,4 @@ js中主要有四种this绑定的类型，分别如下：
 
 4、`new`绑定：在创建对象过程中，`new`会使得构造函数以及原型链中的方法内部的`this`绑定到当前正在创建的对象身上。
 
-回到题目身上，`obj.method(fn, 1)`运行之后，函数内部首先运行`fn()`，很明显，这个时候直接调用`fn`那么`fn`内部的`this`就绑定到了`window`身上（或者理解成由`window`调用`fn`），所以答案是10；接下来，`arguments[0]()`，`arguments`在js中属于类数组对象，具有`length`属性，但不具有数组的一些方法，很明显，`arguments[0]()`运行的就是`fn()`，那这个地方是由谁调用`fn`的呢？答案是由`arguments`来调用，这里`fn`作为`arguments`的内部的一部分，由`arguments`调用，所以此时`fn`内部的`this`就指向了`arguments`，而这一步中的`arguments`的`length`属性值为2，所以答案是2；最后一问，使用了`call`来将`fn`中的`this`显示绑定到`obj`身上，所以，答案就是`obj`的`length`属性，结果为5。
+回到题目身上，`obj.method(fn, 1)`运行之后，函数内部首先运行`fn()`，很明显，这个时候直接调用`fn`，那么`fn`内部的`this`就绑定到了`window`身上（或者理解成由`window`调用`fn`），所以答案是10；接下来，`arguments[0]()`，`arguments`在js中属于类数组对象，具有`length`属性，但不具有数组的一些方法，很明显，`arguments[0]()`运行的就是`fn()`，那这个地方是由谁调用`fn`的呢？答案是由`arguments`来调用，这里`fn`作为`arguments`的内部的一部分，由`arguments`调用，所以此时`fn`内部的`this`就指向了`arguments`，而这一步中的`arguments`的`length`属性值为2，所以答案是2；最后一问，使用了`call`来将`fn`中的`this`显示绑定到`obj`身上，所以，答案就是`obj`的`length`属性，结果为5。
