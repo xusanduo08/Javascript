@@ -4,7 +4,7 @@ __闭包__（closure）是一个受到保护的变量空间，由内嵌函数生
 var baz;
 (function() {
   var foo = 10;
-  vasr bar = 2;
+  var bar = 2;
   baz = function(){
     return foo * bar;
   };
