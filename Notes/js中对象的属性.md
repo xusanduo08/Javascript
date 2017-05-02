@@ -22,7 +22,7 @@
 * [[Configurable]]：同上。
 
 
-所以，数据属性和访问器属性，两者区别主要在于：数据属性可直接在对象上使用点语法定义，访问器属性只能通过JS提供的`Object.defineProperty()`定义，另外，访问器属性具有[[setter]]和[[getter]]两个特性。
+所以，数据属性和访问器属性，两者区别主要在于：数据属性可直接在对象上使用点语法定义，访问器属性只能通过JS提供的`Object.defineProperty()`定义，另外，访问器属性具有[[setter]]和[[getter]]两个特性，无[[writable]]和[[value]]特性。
 
 `Object.defineProperty()`:
 
