@@ -103,7 +103,7 @@ app.directive('myDirective', function () {
 
 > 指令的scope
 
-指令的编译过程伴随着作用域的创建，这个作用域跟指令相关。作用域是可以继承过来的，也可以是孤立的，这都通过scope字段来控制：
+指令的编译过程一般伴随着作用域的创建，这个作用域跟指令相关。作用域是可以继承过来的，也可以是孤立的，这都通过scope字段来控制：
 
 > scope:true，创建一个继承自父作用域的子作用域，子指令拥有自己的作用域，同时也可以访问父指令的作用域；
 >
@@ -159,7 +159,7 @@ app.directive("myDirective", function () {
 })
 ```
 
-另外有一点，__我们在页面上一直都是用的某一个controller中的`$scope`对象上的数据，加假如我们想使用某个controller实例上的数据呢，例如我们在上面代码中给controller自身也添加了属性`this.name = "main";`，如何在页面上使用这个属性？答案是使用`as`关键字__。
+另外有一点，__我们在页面上一直都是用的某一个controller中的`$scope`对象上的数据，假如我们想使用某个controller实例上的数据呢，例如我们在上面代码中给controller自身也添加了属性`this.name = "main";`，如何在页面上使用这个属性？答案是使用`as`关键字，`as`后面表示的是controller的别名__。
 
 ```javascript
 <div ng-controller='myController as ctrl'>
