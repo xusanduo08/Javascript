@@ -1,4 +1,4 @@
-> 什么是指令：指令可以理解为一个具有“特殊行为”的html标签。指令可以完成简单或者复杂的一些逻辑操作，这些操作可以通过angular的一些命令进行定义。
+> 什么是指令：指令可以理解为一个具有“特殊行为”的html标签。这些特殊行为使我们可以自定义的。
 
 比例，angular自带的指令，`ng-repeat`可以创建循环列表，`ng-click`可以实现点击事件绑定，这些都是具有特殊行为的html标签。利用这些指令可以完成一些页面的渲染、事件绑定等操作。
 
@@ -123,5 +123,99 @@ app.directive('myDirective', function () {
 
 
 
-后面还有指令的controller、require等也是很有意思，先不写了。
+> 指令中的controller
 
+指令的定义参数中有一项为controller，其值可为字符串或者函数。如果是字符串，angular会到已经注册的controller中寻找对应的controller，并进行引用，并且controller实例会作为参数引入到link的第4个参数中。
+
+```javascript
+app.controller("myController", function ($scope) {
+  $scope.name = "mengfansheng";
+  this.name = "main";
+})
+
+app.directive("myDirective", function () {
+  return  {
+    controller:"myController",
+    link: function (scope, elem, attrs, ctrl){
+      console.log(ctrl, scope)
+    }
+  }
+})
+```
+
+如果是一个函数，则该函数就作为该指令的匿名controller，该匿名controller同样会作为link函数的第4个参数引用着。
+
+```javascript
+app.directive("myDirective", function () {
+  return  {
+    controller:function ($scope){
+      $scope.name = "mengfansheng";
+  	  this.name = "main";
+    },
+    link: function (scope, elem, attrs, ctrl){
+      console.log(ctrl, scope)
+    }
+  }
+})
+```
+
+另外有一点，__我们在页面上一直都是用的某一个controller中的`$scope`对象上的数据，加假如我们想使用某个controller实例上的数据呢，例如我们在上面代码中给controller自身也添加了属性`this.name = "main";`，如何在页面上使用这个属性？答案是使用`as`关键字__。
+
+```javascript
+<div ng-controller='myController as ctrl'>
+	<h1>{{ctrl.name}}</h1>
+</div>
+```
+
+
+
+> 指令中的require
+
+require参数可以在一个指令中引用另外一个指令的controller，并将其作为参数注入到require所在指令的link函数的第4个参数位置。
+
+```html
+<div my-parent>
+	<div my-child></div>
+</div>
+```
+
+```javascript
+app.directive("myParent", function (){
+  return {
+    restrict: "EA",
+    controller: function () {
+      this.name = "I love mengfansheng";
+    },
+    link: function (){
+      //...
+    }
+  }
+})
+
+app.directive("myChild", function () {
+  return {
+    restrict: "EA",
+    require: "^myParent",//注意这里有个'^'
+    template: "<h1>{{name}}</h1>",
+    link: function (scope, elem, attr, ctrl) {
+      scope.name = ctrl.name + "very much"
+    }
+  }
+})
+```
+
+require的值决定着如何去寻找对应的controller：
+
+1. require: ‘myParent’ 表示只从当前节点上获取myParent指令的controller实例。
+2. require: ‘^myParent’ 表示从当前节点上获取myParent指令的controller实例开始，如果获取不到则一直从parent节点上取。
+3. require: ‘?myParent’，’^?myParent’ 或者 ‘?^myParent’ 加上问号，表示获取不到controller实例也不会报错。
+
+此外，require值可以是一个数组，如果是数组，那么link函数的第4个参数也就是一个数组，此时就需要通过下标来访问对应的controller实例。
+
+
+
+以上，我们可以看出以下事实：
+
+1、link函数中的逻辑只可以被本指令使用，不能也无法共享；
+
+2、由于controller可以被require，也可以直接只用controller参数执行要使用的controller，所以，controller中的方法可以被指令共享。因此，__对于一些需要共享的方法可以放在controller中__，实现代码复用，减少重复劳动。
