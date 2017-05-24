@@ -160,7 +160,7 @@ constant用来定义__常量__的服务，它的值可以使用任何类型。�
 
 具体来讲，decorator不算是一个创建服务的方法，它其实是一个装饰现由服务的方法。它可以在服务实例创建时对其进行拦截，并对服务进行扩展，或者用另外的内容完全替代服务。
 
-```
+```javascript
 app.config(function ($provide) {
     $provide.decorator('A', function ($delegate, $log) {
         $delegate.error = function (msg) {
