@@ -47,3 +47,11 @@
 [一道面试-字符串模板](https://github.com/xusanduo08/Javascript/blob/master/Notes/%E4%B8%80%E9%81%93%E9%9D%A2%E8%AF%95%E9%A2%9801--this%E7%9A%84%E6%8C%87%E5%90%91.md)
 
 [Function和Object的关系](https://github.com/xusanduo08/Javascript/blob/master/Notes/Function%E5%92%8CObject.md)
+
+[script标签的defer和async属性](https://github.com/xusanduo08/Javascript/blob/master/web/script%E7%9A%84defer%E5%92%8Casync.md)
+
+[伪类和伪元素](https://github.com/xusanduo08/Javascript/blob/master/web/%E4%BC%AA%E7%B1%BB%E5%92%8C%E4%BC%AA%E5%85%83%E7%B4%A0.md)
+
+[一道面试题-广度优先的DOM树遍历](https://github.com/xusanduo08/Javascript/blob/master/web/%E5%B9%BF%E5%BA%A6%E4%BC%98%E5%85%88%E7%9A%84DOM%E6%A0%91%E9%81%8D%E5%8E%86.md)
+
+[发布-订阅模式](https://github.com/xusanduo08/Javascript/blob/master/JS%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/%E5%8F%91%E5%B8%83-%E8%AE%A2%E9%98%85%E6%A8%A1%E5%BC%8F.md)
