@@ -1,5 +1,7 @@
 # 目录
 
+[js的按值传递](https://github.com/xusanduo08/Javascript/blob/master/Notes/js%E7%9A%84%E6%8C%89%E5%80%BC%E4%BC%A0%E9%80%92.md)
+
 [angular的Scope](https://github.com/xusanduo08/Javascript/blob/master/AngularJs/angular%E7%9A%84Scope.md)
 
 [angular的指令](https://github.com/xusanduo08/Javascript/blob/master/AngularJs/angular%E7%9A%84%E6%8C%87%E4%BB%A4.md)
