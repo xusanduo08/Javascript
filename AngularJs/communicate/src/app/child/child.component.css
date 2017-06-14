@@ -1,0 +1,25 @@
+.formCnt{
+  width: 500px;
+  height:500px;
+  margin: 20px auto;
+}
+
+.formCnt input{
+  text-indent: 5px;
+  border-radius: 4px;
+  outline: none;
+  border-color: #e50017;
+  width:200px;
+  height: 30px;
+}
+.formCnt button{
+  margin-top:20px;
+  width:100px;
+  height:40px;
+  border:1px solid #e50016;
+  border-radius:4px;
+  background:#fcd017;
+}
+.formCnt button:active{
+  background:#FCF414
+}
