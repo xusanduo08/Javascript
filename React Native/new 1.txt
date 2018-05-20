@@ -1,0 +1,7 @@
+https://github.com/facebook/react-native/issues/3091
+https://www.jianshu.com/p/9b2197d3830a
+
+win10环境下在android studio的模拟器中运行react native。
+https://blog.csdn.net/xiojing825/article/details/69787794
+emulator -list-avds   列出可用的设备
+emulator -avd <name>  启动设备
