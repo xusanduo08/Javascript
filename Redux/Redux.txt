@@ -1,0 +1,17 @@
+Store : 保存数据
+    createStore接受另一个函数作为参数，返回新生成的Store对象
+
+State : Store对象所包含的数据，通过store.getState()得到
+        一个state对应一个view，state相同，view就相同
+
+Action : View通过发出Action表示State要发生变化了。
+        State的变化，会导致View的变化。但是用户接触不到State，只能接触到View。所以，State的变化必须是View导致的。
+        Action描述当前发生的事情。改变State的唯一办法，就是使用Action。
+
+store.dispatch() : 是View发出Action的唯一办法
+
+Reducer : Store接收到Action后，需要给出一个新的State，这样View才能发生变化。这种State的计算过程就叫做Reducer。
+            Reducer是一个函数，接受Action和当前State为参数，返回一个新的State。
+            store.dispatch方法会触发Reducer的自动执行。为此，Store需要知道Reducer函数，做法就是在生成Store的时候，将Reducer传入createStore方法。
+
+store.subscribe() : Store允许使用store.subscribe方法设置监听函数，一旦State发生变化，就自动执行这个函数。
