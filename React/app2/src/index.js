@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
+
+import logger from "redux-logger";
 
 import registerServiceWorker from './registerServiceWorker';
 import {createStore, applyMiddleware} from "redux";
@@ -12,7 +13,7 @@ import sagas from "./sagas"
 
 const sagaMiddleware = createSagaMiddleware(sagas);
 const middlewares = [sagaMiddleware]
-const store = createStore(todoApp, applyMiddleware(...middlewares));
+const store = createStore(todoApp, applyMiddleware(...middlewares, logger));
 
 ReactDOM.render(
     <Provider store={store}>

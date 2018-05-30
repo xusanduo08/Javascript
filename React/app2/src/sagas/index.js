@@ -8,6 +8,9 @@ function * fetchUrl(url){
 export default function * watchFetchRequests(){
     while(true){
         const action = yield take("FETCH_REQUEST");
-        yield fork(fetchUrl, action.Url)
+        console.log("Fetch-request")
+        
+        //yield fork(fetchUrl, action.Url)
+        yield put({type:"start fetch json"})
     }
 }
