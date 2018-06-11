@@ -99,17 +99,7 @@ class Connect extends Component {
     }
 
     componentDidMount() {
-        if (!shouldHandleStateChanges) return
-
-        // componentWillMount fires during server side rendering, but componentDidMount and
-        // componentWillUnmount do not. Because of this, trySubscribe happens during ...didMount.
-        // Otherwise, unsubscription would never take place during SSR, causing a memory leak.
-        // To handle the case where a child component may have triggered a state change by
-        // dispatching an action in its componentWillMount, we have to re-run the select and maybe
-        // re-render.
-        this.subscription.trySubscribe()
-        this.selector.run(this.props)
-        if (this.selector.shouldComponentUpdate) this.forceUpdate()
+        this.subscription.trySubscribe();//在这地方订阅store的变化
     }
 
     componentWillReceiveProps(nextProps) {
@@ -121,7 +111,7 @@ class Connect extends Component {
     }
 
     componentWillUnmount() {
-        if (this.subscription) this.subscription.tryUnsubscribe()
+        if (this.subscription) this.subscription.tryUnsubscribe()  //注销对store的订阅
         this.subscription = null
         this.notifyNestedSubs = noop
         this.store = null
@@ -143,7 +133,7 @@ class Connect extends Component {
 
     initSelector() {
         const sourceSelector = selectorFactory(this.store.dispatch, selectorFactoryOptions)
-        this.selector = makeSelectorStateful(sourceSelector, this.store)
+        this.selector = makeSelectorStateful(sourceSelector, this.store)    //selector用来根据当前的state和props计算下一个props
         this.selector.run(this.props)
     }
 
@@ -153,7 +143,7 @@ class Connect extends Component {
         // parentSub's source should match where store came from: props vs. context. A component
         // connected to the store via props shouldn't use subscription from context, or vice versa.
         const parentSub = (this.propsMode ? this.props : this.context)[subscriptionKey]
-        this.subscription = new Subscription(this.store, parentSub, this.onStateChange.bind(this))
+        this.subscription = new Subscription(this.store, parentSub, this.onStateChange.bind(this)) //返回一个订阅类，里面包含了订阅store的逻辑
 
         // `notifyNestedSubs` is duplicated to handle the case where the component is  unmounted in
         // the middle of the notification loop, where `this.subscription` will then be null. An
@@ -161,16 +151,17 @@ class Connect extends Component {
         // replacing it with a no-op on unmount. This can probably be avoided if Subscription's
         // listeners logic is changed to not call listeners that have been unsubscribed in the
         // middle of the notification loop.
-        this.notifyNestedSubs = this.subscription.notifyNestedSubs.bind(this.subscription)
+        this.notifyNestedSubs = this.subscription.notifyNestedSubs.bind(this.subscription) //通知其他监听者的函数
     }
 
-    onStateChange() {
+    onStateChange() {  //有状态变化时就会调用这个函数
         this.selector.run(this.props)
 
-        if (!this.selector.shouldComponentUpdate) {
-            this.notifyNestedSubs()
+        if (!this.selector.shouldComponentUpdate) { //如果不更新，那么通知子代监听者，这是为什么？难道是基于祖先组件也许不用更新，但是子代组件需要更新这个逻辑？
+            //如果上面的逻辑成立，那这地方至少也得有个判断子代是否需要更新的逻辑吧
+            this.notifyNestedSubs() //通知其他监听者，也就是调用所有的监听函数
         } else {
-            this.componentDidUpdate = this.notifyNestedSubsOnComponentDidUpdate
+            this.componentDidUpdate = this.notifyNestedSubsOnComponentDidUpdate  //组件更新完之后就会调用这个函数，这个函数用来通知子代的订阅函数运行
             this.setState(dummyState)
         }
     }
