@@ -94,12 +94,14 @@ class Connect extends Component {
         // to any descendants receiving store+subscription from context; it passes along
         // subscription passed to it. Otherwise, it shadows the parent subscription, which allows
         // Connect to control ordering of notifications to flow top-down.
+        //如果是从props获取到的store，则它的订阅对于通过context获取store的子组件都应该是透明的
         const subscription = this.propsMode ? null : this.subscription
         return { [subscriptionKey]: subscription || this.context[subscriptionKey] }
     }
 
     componentDidMount() {
-        this.subscription.trySubscribe();//在这地方订阅store的变化
+        this.subscription.trySubscribe();//在这地方订阅store的变化，在trySubscriber()函数里会判断store的来源，如果来自父组件，则该组件的订阅函数会放到父组件的订阅队列里
+                                        //也就是父组件订阅类的next和current数组里。
     }
 
     componentWillReceiveProps(nextProps) {
@@ -144,6 +146,10 @@ class Connect extends Component {
         // connected to the store via props shouldn't use subscription from context, or vice versa.
         const parentSub = (this.propsMode ? this.props : this.context)[subscriptionKey]
         this.subscription = new Subscription(this.store, parentSub, this.onStateChange.bind(this)) //返回一个订阅类，里面包含了订阅store的逻辑
+
+        /*
+            每一个组件都会有这样一个订阅类，这个订阅类里有个current和next队列，用来保存着这个组件下子组件的订阅函数，这样可以保证父组件总是在子组件刷新前刷新。
+        */
 
         // `notifyNestedSubs` is duplicated to handle the case where the component is  unmounted in
         // the middle of the notification loop, where `this.subscription` will then be null. An
