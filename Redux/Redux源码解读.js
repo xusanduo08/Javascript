@@ -12,11 +12,12 @@ Redux:  createStore：创建并返回一个store
 */
 import { storeShape, subscriptionShape } from "../utils/PropTypes";
 
+const subscriptionKey = `${storeKey}Subscription`//storeSubscription
 class Provider extends Component {
     getChildContext() {
         return {
             store: this.store,
-            storeSubscription: null
+            storeSubscription: null     //这地方会在子组件中用到
         }
     }
     constructor(props, context) {
@@ -76,7 +77,7 @@ class Connect extends Component {
         this.state = {}
         this.renderCount = 0
         this.store = props[storeKey] || context[storeKey]
-        this.propsMode = Boolean(props[storeKey])
+        this.propsMode = Boolean(props[storeKey])//一般情况下，对于Provider下的第一级子组件，这个表达式的返回值肯定是false了
         this.setWrappedInstance = this.setWrappedInstance.bind(this)
 
         invariant(this.store,
@@ -102,6 +103,9 @@ class Connect extends Component {
     componentDidMount() {
         this.subscription.trySubscribe();//在这地方订阅store的变化，在trySubscriber()函数里会判断store的来源，如果来自父组件，则该组件的订阅函数会放到父组件的订阅队列里
                                         //也就是父组件订阅类的next和current数组里。
+                                        //理解下来，应该只有最顶级的父元素是直接订阅store的，其它子组件都是通过嵌套，把各自的订阅函数放到了对应父级的listeners队列里，通过一层层
+                                        //的嵌套，最终到了最顶级的父组件的listeners队列里
+                                        //针对Provider下第一级子组件，由于parentSub为null，所以在订阅store的时候会直接通过this.store.subscribe()订阅
     }
 
     componentWillReceiveProps(nextProps) {
@@ -144,7 +148,10 @@ class Connect extends Component {
 
         // parentSub's source should match where store came from: props vs. context. A component
         // connected to the store via props shouldn't use subscription from context, or vice versa.
-        const parentSub = (this.propsMode ? this.props : this.context)[subscriptionKey]
+        //针对Provider第一级子组件，返回this.context.storeSubscription，得到的值是null
+        //非第一级的子组件，parentSub得到的就是上一级父组件的subscription实例
+        const parentSub = (this.propsMode ? this.props : this.context)[subscriptionKey]    
+
         this.subscription = new Subscription(this.store, parentSub, this.onStateChange.bind(this)) //返回一个订阅类，里面包含了订阅store的逻辑
 
         /*
