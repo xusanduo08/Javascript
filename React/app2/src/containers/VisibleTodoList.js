@@ -23,7 +23,7 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch =>{
     return {
         onTodoClick: id => {
-            dispatch(toggleTodo(id))
+            dispatch(toggleTodo(id))//这个对象通过dispatch函数与action creator以某种方式绑定在一起，而且这个对象还会通过props注入到被包装组件中
         }
     }
 }
