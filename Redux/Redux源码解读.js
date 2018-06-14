@@ -140,7 +140,7 @@ class Connect extends Component {
     initSelector() {
         const sourceSelector = selectorFactory(this.store.dispatch, selectorFactoryOptions)
         this.selector = makeSelectorStateful(sourceSelector, this.store)    //selector用来根据当前的state和props计算下一个props
-        this.selector.run(this.props)
+        this.selector.run(this.props) //sourceSelector(this.store.getState(), props) => handleSubsequentCalls(nextState, nextOwnProps)
     }
 
     initSubscription() {
@@ -175,7 +175,7 @@ class Connect extends Component {
             this.notifyNestedSubs() //通知其他监听者，也就是调用所有的监听函数
         } else {
             this.componentDidUpdate = this.notifyNestedSubsOnComponentDidUpdate  //组件更新完之后就会调用这个函数，这个函数用来通知子代的订阅函数运行
-            this.setState(dummyState)
+            this.setState(dummyState)//dummyState是个空对象，这地方为什么要设置state为一个空对象
         }
     }
 
