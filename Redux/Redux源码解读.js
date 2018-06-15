@@ -102,10 +102,10 @@ class Connect extends Component {
 
     componentDidMount() {
         this.subscription.trySubscribe();//在这地方订阅store的变化，在trySubscriber()函数里会判断store的来源，如果来自父组件，则该组件的订阅函数会放到父组件的订阅队列里
-                                        //也就是父组件订阅类的next和current数组里。
-                                        //理解下来，应该只有最顶级的父元素是直接订阅store的，其它子组件都是通过嵌套，把各自的订阅函数放到了对应父级的listeners队列里，通过一层层
-                                        //的嵌套，最终到了最顶级的父组件的listeners队列里
-                                        //针对Provider下第一级子组件，由于parentSub为null，所以在订阅store的时候会直接通过this.store.subscribe()订阅
+        //也就是父组件订阅类的next和current数组里。
+        //理解下来，应该只有最顶级的父元素是直接订阅store的，其它子组件都是通过嵌套，把各自的订阅函数放到了对应父级的listeners队列里，通过一层层
+        //的嵌套，最终到了最顶级的父组件的listeners队列里
+        //针对Provider下第一级子组件，由于parentSub为null，所以在订阅store的时候会直接通过this.store.subscribe()订阅
     }
 
     componentWillReceiveProps(nextProps) {
@@ -136,10 +136,61 @@ class Connect extends Component {
     setWrappedInstance(ref) {
         this.wrappedInstance = ref
     }
-
+    /*
+    selectorFactory:
+        selectorFactory==>connectAdvanced(selectoryFactory, ...)作为入参传进来的，也就是在connect的里面返回的connectHOC(selectorFactory, ...)==>
+        connect里面的selectoryFactory来自defaultSelectorFactory也就是selectoryFactory.js这个文件
+        selectorFactory.js这个文件返回一个函数，如下，
+        export default function finalPropsSelectorFactory(dispatch, {...}) {
+            ...
+            const selectorFactory = options.pure
+                ? pureFinalPropsSelectorFactory
+                : impureFinalPropsSelectorFactory
+            return selectorFactory(
+                mapStateToProps,
+                mapDispatchToProps,
+                mergeProps,
+                dispatch,
+                options
+            )
+        }
+        也就是说，selectorFactory(this.store.dispatch, selectorFactoryOptions)这行代码其实就是selectorFactory(mapStateToProps,mapDispatchToProps,mergeProps,dispatch,options)，
+        其返回的结果就赋值给了sourceSelector。
+        我们来看下selectorFactory的返回值：默认情况下selectorFactory指向的是pureFinalPropsSelectorFactory这个函数（先看默认情况），
+        也就是说，sourceSelector其实就是pureFinalPropsSelectorFactory函数执行后的返回值==>purFinalPropsSelector依然返回一个函数pureFinalPropsSelector，
+        function pureFinalPropsSelector(nextState, nextOwnProps) {
+            return hasRunAtLeastOnce
+                ? handleSubsequentCalls(nextState, nextOwnProps)
+                : handleFirstCall(nextState, nextOwnProps)
+        }
+        函数两个入参。所以，默认情况下，sourceSelector指向的就是上面这个函数，接收state和props作为入参。
+    */
     initSelector() {
         const sourceSelector = selectorFactory(this.store.dispatch, selectorFactoryOptions)
         this.selector = makeSelectorStateful(sourceSelector, this.store)    //selector用来根据当前的state和props计算下一个props
+        /*
+        来看下makeSelectorStateful干了什么（这里只看做了什么，先不看为什么这样做，因为我暂时也不知道为什么这样做）：返回一个对象，这个对象具有一个run方法，
+        run方法里面我们只看sourceSelector(store.getState(), props)，所以这个时候就要返回selectorFactory里面看下sourceSelector是个什么。
+        经过上面的分析，sourceSelector默认情况下执行结果为handleSubsequentCalls(nextState, nextOwnProps)==>所以就要去看handleSubsequentCalls这个函数是做什么的
+
+        handleSubsequentCalls：(nextState, nextOwnProps) => {
+                const propsChanged = !areOwnPropsEqual(nextOwnProps, ownProps)
+                const stateChanged = !areStatesEqual(nextState, state)
+                state = nextState
+                ownProps = nextOwnProps
+
+                if (propsChanged && stateChanged) return handleNewPropsAndNewState()
+                if (propsChanged) return handleNewProps()
+                if (stateChanged) return handleNewState()
+                return mergedProps
+            }
+
+            return function pureFinalPropsSelector(nextState, nextOwnProps) {
+                return hasRunAtLeastOnce
+                    ? handleSubsequentCalls(nextState, nextOwnProps)
+                    : handleFirstCall(nextState, nextOwnProps)
+            }
+        */
         this.selector.run(this.props) //sourceSelector(this.store.getState(), props) => handleSubsequentCalls(nextState, nextOwnProps)
     }
 
@@ -150,7 +201,7 @@ class Connect extends Component {
         // connected to the store via props shouldn't use subscription from context, or vice versa.
         //针对Provider第一级子组件，返回this.context.storeSubscription，得到的值是null
         //非第一级的子组件，parentSub得到的就是上一级父组件的subscription实例
-        const parentSub = (this.propsMode ? this.props : this.context)[subscriptionKey]    
+        const parentSub = (this.propsMode ? this.props : this.context)[subscriptionKey]
 
         this.subscription = new Subscription(this.store, parentSub, this.onStateChange.bind(this)) //返回一个订阅类，里面包含了订阅store的逻辑
 
