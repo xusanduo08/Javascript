@@ -1,3 +1,6 @@
+
+//state的改变、props的改变都会引起组件的重新渲染。（shouldComponentUpdat=true）
+
 /*
 Redux:  createStore：创建并返回一个store
         combineReducers: reducer合成。当发起一个Action时，该函数会根据相应的key值，将state数据传入到对应的子reducer中
@@ -174,21 +177,15 @@ class Connect extends Component {
         经过上面的分析，sourceSelector默认情况下执行结果为handleSubsequentCalls(nextState, nextOwnProps)==>所以就要去看handleSubsequentCalls这个函数是做什么的
 
         handleSubsequentCalls：(nextState, nextOwnProps) => {
-                const propsChanged = !areOwnPropsEqual(nextOwnProps, ownProps)
-                const stateChanged = !areStatesEqual(nextState, state)
-                state = nextState
+                const propsChanged = !areOwnPropsEqual(nextOwnProps, ownProps) //判断props是否变化
+                const stateChanged = !areStatesEqual(nextState, state) //判断state是否变化
+                state = nextState       
                 ownProps = nextOwnProps
 
                 if (propsChanged && stateChanged) return handleNewPropsAndNewState()
                 if (propsChanged) return handleNewProps()
                 if (stateChanged) return handleNewState()
                 return mergedProps
-            }
-
-            return function pureFinalPropsSelector(nextState, nextOwnProps) {
-                return hasRunAtLeastOnce
-                    ? handleSubsequentCalls(nextState, nextOwnProps)
-                    : handleFirstCall(nextState, nextOwnProps)
             }
         */
         this.selector.run(this.props) //sourceSelector(this.store.getState(), props) => handleSubsequentCalls(nextState, nextOwnProps)
