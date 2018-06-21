@@ -141,7 +141,7 @@ class Connect extends Component {
     }
     /*
     selectorFactory:
-        selectorFactory==>connectAdvanced(selectoryFactory, ...)作为入参传进来的，也就是在connect的里面返回的connectHOC(selectorFactory, ...)==>
+        selectorFactory==>connectAdvanced(selectoryFactory, ...)作为入参传进来的，也就是在connect的里面返回的connectHOC(selectorFactory, ...)里的selectorFactory==>
         connect里面的selectoryFactory来自defaultSelectorFactory也就是selectoryFactory.js这个文件
         selectorFactory.js这个文件返回一个函数，如下，
         export default function finalPropsSelectorFactory(dispatch, {...}) {
@@ -223,7 +223,7 @@ class Connect extends Component {
             this.notifyNestedSubs() //通知其他监听者，也就是调用所有的监听函数
         } else {
             this.componentDidUpdate = this.notifyNestedSubsOnComponentDidUpdate  //组件更新完之后就会调用这个函数，这个函数用来通知子代的订阅函数运行
-            this.setState(dummyState)//dummyState是个空对象，这地方为什么要设置state为一个空对象
+            this.setState(dummyState)//dummyState是个空对象，这地方为什么要设置state为一个空对象，我猜测这地方只是为了引起组件重新render的动作
         }
     }
 
@@ -265,3 +265,18 @@ class Connect extends Component {
         }
     }
 }
+
+props是只读属性，无法在组件内自己修改自己的props，如果想修改props，应该修改props的来源
+
+sourceSelector(store.getState(), this.props) => pureFinalPropsSelector(nextState, nextOwnProps) => handleSubSequenCalls(nextState, nextOwnProps)
+    ||                                                                                                                ||
+    ||                                                                                                                ||
+    ||                                                                                                               \||/
+    ||                                                                                                            handleNewState(){
+    ||                                                                                                               state = nextState;
+    ||                                                                                                                ownProps = nextOwnProps
+store改变，开始运行订阅函数                                                                                           stateProps = mapStateToProps(state, ownProps)
+    ||计算出下一个state                                                                                              mergedProps = mergeProps(stateProps, dispatchProps, ownProps)
+reducer
+    ||                                                                                                              return mergedProps
+dispatch(action)                                                                                                }
