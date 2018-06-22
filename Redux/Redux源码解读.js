@@ -268,6 +268,8 @@ class Connect extends Component {
 
 props是只读属性，无法在组件内自己修改自己的props，如果想修改props，应该修改props的来源
 
+mapStateToProps(state, ownProps)这里面的ownProps指的是connect()(component)返回的容器组件（container）的props，而不是展示组件（component）的props
+
 sourceSelector(store.getState(), this.props) => pureFinalPropsSelector(nextState, nextOwnProps) => handleSubSequenCalls(nextState, nextOwnProps)
     ||                                                                                                                ||
     ||                                                                                                                ||
