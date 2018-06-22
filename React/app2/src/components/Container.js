@@ -12,7 +12,6 @@ class Container extends React.Component {
     }
     changeValue = value =>{
         this.setState({value})
-        debugger
     }
     getChildContext(){
         return {
