@@ -270,6 +270,22 @@ props是只读属性，无法在组件内自己修改自己的props，如果想�
 
 mapStateToProps(state, ownProps)这里面的ownProps指的是connect()(component)返回的容器组件（container）的props，而不是展示组件（component）的props
 
+connect的作用就是从context中获取到store，然后有选择性的（mapStateToProps,mapDispatchToProps）将state中的值通过props传给其包含的子组件。
+
+combineReducers的作用：取出state中的部分数据，交给指定的reducer处理（分发全部state的属性到各个reducer中去）
+combineReducers{
+    key1: reducer1,
+    key2: reducers
+}
+实际在运行的时候是：reducer1(state[key1], action), reducer2(state[key2])。这样做的好处是，避免每次都向reducer中传入一整个state，使得reduce易于管理和书写r。
+因为web应用的
+state会随着需求的增加而变的非常复杂，我们每次修改state肯定也只是修改state中的部分数据，假如我需要修改的只是state.one.a，
+那么这时候传入一整个state，在处理的时候还首先要一层层去找这个属性，要判断它的父级属性state.a是否存在，然后在判断state.b是否存在，都存在了，再进行修改，这使得程序很复杂,
+同时，引入传入的是一整个state，如果一不小心修改了state中其他部分的数据，还会导致额外的问题。假如我们传入state.one就可以少很多代码，
+像这样reducer(state.one, action)，这样修改也只是修改state.one下面的数据，其他数据我不碰，避免不必要的问题出现。
+这样使得每个reducer只关心自己的那部分数据，在编写代码的时候相对也会简单很多。还有个比较重要的一个点，reducer是个纯函数，运行的时候会对传入的state进行深拷贝，很明显，传入一整个state
+对性能的影响要比传入部分state大。
+
 sourceSelector(store.getState(), this.props) => pureFinalPropsSelector(nextState, nextOwnProps) => handleSubSequenCalls(nextState, nextOwnProps)
     ||                                                                                                                ||
     ||                                                                                                                ||
@@ -282,3 +298,10 @@ store改变，开始运行订阅函数                                          
 reducer
     ||                                                                                                              return mergedProps
 dispatch(action)                                                                                                }
+
+
+
+dispatch(action) <= dispatch(actionCreator(...args))
+bindActionCreator => (actionCreator, dispatch) {
+    return (...args) => dispatch(actionCreator(...args))
+}
