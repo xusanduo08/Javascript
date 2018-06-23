@@ -6,6 +6,8 @@ class ChildOne extends React.Component {
         super()
     }
 
+    
+
     handleChange= e => {
         this.context.changeValue(e.target.value);
         
@@ -22,7 +24,8 @@ class ChildOne extends React.Component {
 }
 
 ChildOne.contextTypes = {
-    changeValue: PropTypes.func
+    changeValue: PropTypes.func,
+    value: PropTypes.string
 }
 
 export default ChildOne;
