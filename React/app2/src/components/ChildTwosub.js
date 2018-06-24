@@ -3,12 +3,16 @@ import PropTypes from "react";
 
 
 class ChildTwosub extends React.Component {
-    constructor(){
+    constructor(props, context){
         super()
+        setTimeout(() => {
+            console.log(context)
+        }, 2000)
     }
 
     shouldComponentUpdate(props, state, context){
         console.log(context);
+        return true;
     }
 
     render(){
@@ -24,7 +28,8 @@ class ChildTwosub extends React.Component {
 }
 
 ChildTwosub.contextTypes = {
-    value: PropTypes.string
+    value: PropTypes.string,
+    store:PropTypes.isRequired
 }
 
 export default ChildTwosub
