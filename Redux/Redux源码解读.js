@@ -72,7 +72,7 @@ function connectAdvanced(
 }
 
 
-class Connect extends Component {
+class Connect extends Component {  //实际最终返回的是connect组件
     constructor(props, context) {
         super(props, context)
 
@@ -80,7 +80,7 @@ class Connect extends Component {
         this.state = {}
         this.renderCount = 0
         this.store = props[storeKey] || context[storeKey]
-        this.propsMode = Boolean(props[storeKey])//一般情况下，对于Provider下的第一级子组件，这个表达式的返回值肯定是false了
+        this.propsMode = Boolean(props[storeKey])//一般情况下，对于Provider下的组件，这个表达式的返回值肯定是false了
         this.setWrappedInstance = this.setWrappedInstance.bind(this)
 
         invariant(this.store,
@@ -98,13 +98,15 @@ class Connect extends Component {
         // to any descendants receiving store+subscription from context; it passes along
         // subscription passed to it. Otherwise, it shadows the parent subscription, which allows
         // Connect to control ordering of notifications to flow top-down.
-        //如果是从props获取到的store，则它的订阅对于通过context获取store的子组件都应该是透明的
+        //如果是从props获取到的store，则它的订阅对于通过context获取store的子组件都应该是透明的，就是说它的订阅实例子组件看不到
         const subscription = this.propsMode ? null : this.subscription
+        //如果该组件订阅实例是透明的，则将其父组件的订阅实例放到上下文中，否则将该组件的订阅实例放到上下文中
         return { [subscriptionKey]: subscription || this.context[subscriptionKey] }
     }
 
     componentDidMount() {
-        this.subscription.trySubscribe();//在这地方订阅store的变化，在trySubscriber()函数里会判断store的来源，如果来自父组件，则该组件的订阅函数会放到父组件的订阅队列里
+        this.subscription.trySubscribe();
+        //在这地方订阅store的变化，在trySubscriber()函数里会判断store的来源，如果来自父组件，则该组件的订阅函数会放到父组件的订阅队列里
         //也就是父组件订阅类的next和current数组里。
         //理解下来，应该只有最顶级的父元素是直接订阅store的，其它子组件都是通过嵌套，把各自的订阅函数放到了对应父级的listeners队列里，通过一层层
         //的嵌套，最终到了最顶级的父组件的listeners队列里
@@ -196,7 +198,7 @@ class Connect extends Component {
 
         // parentSub's source should match where store came from: props vs. context. A component
         // connected to the store via props shouldn't use subscription from context, or vice versa.
-        //针对Provider第一级子组件，返回this.context.storeSubscription，得到的值是null
+        //返回this.context.storeSubscription，针对Provider第一级子组件得到的值肯定是null，因为Provider没有订阅实例，其放在上下文中的storeSubscription就是null
         //非第一级的子组件，parentSub得到的就是上一级父组件的subscription实例
         const parentSub = (this.propsMode ? this.props : this.context)[subscriptionKey]
 
@@ -218,12 +220,17 @@ class Connect extends Component {
     onStateChange() {  //有状态变化时就会调用这个函数
         this.selector.run(this.props)
 
-        if (!this.selector.shouldComponentUpdate) { //如果不更新，那么通知子代监听者，这是为什么？难道是基于祖先组件也许不用更新，但是子代组件需要更新这个逻辑？
+        if (!this.selector.shouldComponentUpdate) { 
+            //如果不更新，那么通知子代监听者，这是为什么？难道是基于祖先组件也许不用更新，但是子代组件需要更新这个逻辑？
             //如果上面的逻辑成立，那这地方至少也得有个判断子代是否需要更新的逻辑吧
+
+            //解释：判断组件是否需要更新是在组件内部进行判断的，所以这地方即使父组件不需要更新，
+            //仍需要通知子组件state有变化，然后子组件内部会自己判断是否需要更新。
+            //由这地方我们可以推测出，每个connect组件都会对state的变化进行响应，每个组件内部会比较state变化前后props的是否有变化（通过state计算出新的props）来决定是否重新渲染自己。
             this.notifyNestedSubs() //通知其他监听者，也就是调用所有的监听函数
         } else {
             this.componentDidUpdate = this.notifyNestedSubsOnComponentDidUpdate  //组件更新完之后就会调用这个函数，这个函数用来通知子代的订阅函数运行
-            this.setState(dummyState)//dummyState是个空对象，这地方为什么要设置state为一个空对象，我猜测这地方只是为了引起组件重新render的动作
+            this.setState(dummyState)//dummyState是个空对象，这地方为什么要设置state为一个空对象=》我猜测这地方只是为了引起组件重新render的动作
         }
     }
 
