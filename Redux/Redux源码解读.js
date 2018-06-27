@@ -239,7 +239,21 @@ class Connect extends Component {  //实际最终返回的是connect组件
         // needs to notify nested subs. Once called, it unimplements itself until further state
         // changes occur. Doing it this way vs having a permanent `componentDidUpdate` that does
         // a boolean check every time avoids an extra method call most of the time, resulting
-        // in some perf boost.
+        // in some perf boost.（这地方不太明白，即使componentDidUpdate是一直存在的，也只有这个组件更新完后才调用，这种情况也不是一种多余的调用啊？？）
+        //当onStateChange内部判断需要通知子订阅实例的时候componentDidUpdate就会被赋值。componentDidUpdate一旦被执行，其
+        //就会将自己置为undefined，直到下一次state change发生。这样的做法与一直拥有一个已经实现的componentDidUpdate相比，前者每次
+        //都会进行一次判断，避免不必要的函数调用，提升一些性能
+        //找到一个类似的issue，https://github.com/reduxjs/react-redux/issues/739
+        //按照这个issue的理解，这地方是为了防止这样一种情况：父组件是没有被connect包括的组件，然后子组件是被connect包裹的组件，当父组件re-render后，
+        //会直接引起子组件的re-render，因为父组件没有被connect处理，所以这地方不会通过调用子组件的onStateChange方式来通知子组件re-render，那么这种情况下，如果
+        //子组件的componentDidUpdate一直是存在的，那么这时候子组件re-render后就会去通知下一层的子组件，这个时候才会通过调用下一层子组件的onStateChange方法通知
+        //组件是否渲染。而事实上，没有被connect处理的父组件re-render后子组件根本不需要re-render（父组件都没有绑定到store，它的变更肯定不是因为store有变化。）
+        //，上面提到的这种情况，由于componentDidUpdate一直存在，所以第一层子组件更新完后，按照声明周期调用了componentDidUpdate，
+        //通知了下一层子组件，这地方，是没有必要的，而按照现在componentDidUpdate实现的方式，这种情况是可以避免的。
+
+
+
+        /////////////////////说的不对，子组件渲不渲染在内部由shouldComponentUpdate控制着，父组件渲染了，子组件未必渲染。想不通了
         this.componentDidUpdate = undefined
         this.notifyNestedSubs()
     }
