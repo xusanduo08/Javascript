@@ -127,10 +127,10 @@ class Connect extends Component {  //实际最终返回的是connect组件
         但是父组件只是因为自己本身的props改变而发生的re-render，store是没有改变的，所以没有必要通知子组件运行各自的onStateChange方法，那么我们就需要在componentDidUpdate内部做一个判断，判断当前是不是因为state改变
         而引起的re-render，如果是就通知子组件，不是就不通知，但是有另一个更好的方法实现相同的效果，可以不用每次都判断。
             那么，该如何做呢？
-            答案：把componentDidUpdate方法的实现放在组件的onStateChange方法内部。首先，onStateChange方法只会因为state改变而被调用，如果onStateChange被调用了，说明state发生了改变，那么这时候不管父组件是否要更新
+            答案：把componentDidUpdate方法的实现放在组件的onStateChange方法内部。首先，onStateChange方法只会因为state改变而被调用，如果onStateChange被调用了，说明state发生了改变，那么这时候不管父组件是否要re-render
             都是要通知子组件的。onStateChange内部会判断组件是否需要更新，如果需要，则将notifyNestedSubsOnComponentDidUpdate赋值到componentDidUpdate上，然后组件渲染完毕后就会执行notifyNestedSubsOnComponentDidUpdate方法（
-            这样可以确保子组件在父组件之后渲染）。同时，在执行notifyNestedSubsOnComponentDidUpdate内部，又会将componentDidUpdate重新赋值为undefined，这样其他方式引起的组件re-render就没法再re-render之后通知子组件了，而同时
-            又能确保state发生改变时通知到子组件。
+            这样可以确保子组件在父组件之后渲染）；如果不需要，则直接执行notifyNestedSubs通知子组件。同时，在执行notifyNestedSubsOnComponentDidUpdate内部，又会将componentDidUpdate重新赋值为undefined，这样其他方式引起的
+            组件re-render就没法再re-render之后通知子组件了，而同时又能确保state发生改变时通知到子组件。
 
         */
         this.selector.run(nextProps)
@@ -268,9 +268,10 @@ class Connect extends Component {  //实际最终返回的是connect组件
         //会直接引起子组件的re-render(不会的，组件是否更新都会由shouComponentUpdate控制，返回true才会更新--20186.29)，因为父组件没有被connect处理，所以这地方不会通过调用子组件的onStateChange方式来通知子组件re-render，
         //那么这种情况下，如果子组件的componentDidUpdate一直是存在的，那么这时候子组件re-render后就会去通知下一层的子组件，这个时候才会通过调用下一层子组件的onStateChange方法通知
         //组件是否渲染。====而事实上，没有被connect处理的父组件re-render后子组件根本不需要re-render（父组件都没有绑定到store，它的变更肯定不是因为store有变化。）===这句说的也不对，组件更新主要看shouldComponentUpdate
-        //返回什么,所以这地方应该重点关注的是selector.run在哪里会被调用，哪种情况会产生selector.shouldUpdate为true的结果，在connect里，componentWillReceiveProps会在接收props时或者props发生变更时调用selector.run方法=====
-        //，上面提到的这种情况，由于componentDidUpdate一直存在，所以第一层子组件更新完后，按照声明周期调用了componentDidUpdate，
-        //通知了下一层子组件，这地方，是没有必要的，而按照现在componentDidUpdate实现的方式，这种情况是可以避免的。
+        //返回什么,所以这地方应该重点关注的是selector.run在哪里会被调用，哪种情况会产生selector.shouldUpdate为true的结果，在connect里，componentWillReceiveProps会在接收props时或者props发生变更时调用selector.run方法
+        //而willReceiveProps之后是会调用shouldUpdate，返回true则开始re-render=====，上面提到的这种情况，由于componentDidUpdate一直存在，所以第一层子组件更新完后，按照声明周期调用了componentDidUpdate，
+        //通知了下一层子组件，这地方，是没有必要的（为了避免这种没必要的通知，减少开支，需要在DidUpdate方法内加判断，因为state改变引起的re-render才通知子组件），而按照现在componentDidUpdate实现的方式，这种判断是不需要的，
+        //而且程序性能更好。
 
 
 
