@@ -114,6 +114,25 @@ class Connect extends Component {  //实际最终返回的是connect组件
     }
 
     componentWillReceiveProps(nextProps) {
+        /*
+            2018.6.29日注释：
+            注意这地方，当组件接收的props改变时（一般connect是直接订阅store的，正常在使用的时候都没有说直接向connect传props的情况，但不是不可以传），这个函数就会执行。
+        这时候，selector.run就会运行，因为props确实改变了，所以selector.shouldComponentUpdate会变成true，接着组件的componentShouldUpdate运行，运行结果返回true，
+        然后，组件开始re-render，re-render之后接着执行componentDidUpdate--这个地方就容易有问题了--因为为了确保子组件在父组件之后渲染，componentDidUpdate负责的是本组件render之
+        后通知子组件执行各自的onStateChange函数，这地方父组件因为props改变触发re-render，那这种情况是否要通知子组件呢？答案：不需要。
+            为什么？
+            connect组件是直接订阅store的，组件内部的onStateChange方法在store发生改变时就会被触发并计算出最新的props传入到connect包裹的真正的组件内部。所以，这地方要明白，onStateChange只是
+        用来响应state的变化而存在的，如果state不发生改变，onStateChange就不应该被触发。好了，看看我们上面提到的情况，一个父connect组件嵌套一个子connect组件，父组件接收外界传入的props渲染自身。当父组件的props
+        发生改变时，父组件会开始re-render过程，结束后执行componentDidUpdate方法，为了实现子组件在父组件之后渲染的效果，componentDidUpdate内部实际执行的是通知子组件运行自己的onStateChange方法。
+        但是父组件只是因为自己本身的props改变而发生的re-render，store是没有改变的，所以没有必要通知子组件运行各自的onStateChange方法，那么我们就需要在componentDidUpdate内部做一个判断，判断当前是不是因为state改变
+        而引起的re-render，如果是就通知子组件，不是就不通知，但是有另一个更好的方法实现相同的效果，可以不用每次都判断。
+            那么，该如何做呢？
+            答案：把componentDidUpdate方法的实现放在组件的onStateChange方法内部。首先，onStateChange方法只会因为state改变而被调用，如果onStateChange被调用了，说明state发生了改变，那么这时候不管父组件是否要更新
+            都是要通知子组件的。onStateChange内部会判断组件是否需要更新，如果需要，则将notifyNestedSubsOnComponentDidUpdate赋值到componentDidUpdate上，然后组件渲染完毕后就会执行notifyNestedSubsOnComponentDidUpdate方法（
+            这样可以确保子组件在父组件之后渲染）。同时，在执行notifyNestedSubsOnComponentDidUpdate内部，又会将componentDidUpdate重新赋值为undefined，这样其他方式引起的组件re-render就没法再re-render之后通知子组件了，而同时
+            又能确保state发生改变时通知到子组件。
+
+        */
         this.selector.run(nextProps)
     }
 
@@ -239,15 +258,17 @@ class Connect extends Component {  //实际最终返回的是connect组件
         // needs to notify nested subs. Once called, it unimplements itself until further state
         // changes occur. Doing it this way vs having a permanent `componentDidUpdate` that does
         // a boolean check every time avoids an extra method call most of the time, resulting
-        // in some perf boost.（这地方不太明白，即使componentDidUpdate是一直存在的，也只有这个组件更新完后才调用，这种情况也不是一种多余的调用啊？？）
+        // in some perf boost.
+        //（这地方不太明白，即使componentDidUpdate是一直存在的，也只有这个组件更新完后才调用，这种情况也不是一种多余的调用啊？？《====解释：有情况是组件更新不是state改变引起的，这种情况不需要通知子组件--20186.29注释）
         //当onStateChange内部判断需要通知子订阅实例的时候componentDidUpdate就会被赋值。componentDidUpdate一旦被执行，其
         //就会将自己置为undefined，直到下一次state change发生。这样的做法与一直拥有一个已经实现的componentDidUpdate相比，前者每次
         //都会进行一次判断，避免不必要的函数调用，提升一些性能
         //找到一个类似的issue，https://github.com/reduxjs/react-redux/issues/739
-        //按照这个issue的理解，这地方是为了防止这样一种情况：父组件是没有被connect包括的组件，然后子组件是被connect包裹的组件，当父组件re-render后，
-        //会直接引起子组件的re-render，因为父组件没有被connect处理，所以这地方不会通过调用子组件的onStateChange方式来通知子组件re-render，那么这种情况下，如果
-        //子组件的componentDidUpdate一直是存在的，那么这时候子组件re-render后就会去通知下一层的子组件，这个时候才会通过调用下一层子组件的onStateChange方法通知
-        //组件是否渲染。而事实上，没有被connect处理的父组件re-render后子组件根本不需要re-render（父组件都没有绑定到store，它的变更肯定不是因为store有变化。）
+        //按照这个issue的理解，这地方是为了防止这样一种情况：父组件是没有被connect包括的组件（不一定，任何组件都可以，包不包裹都行--2018.6.29），然后子组件是被connect包裹的组件，当父组件re-render后，
+        //会直接引起子组件的re-render(不会的，组件是否更新都会由shouComponentUpdate控制，返回true才会更新--20186.29)，因为父组件没有被connect处理，所以这地方不会通过调用子组件的onStateChange方式来通知子组件re-render，
+        //那么这种情况下，如果子组件的componentDidUpdate一直是存在的，那么这时候子组件re-render后就会去通知下一层的子组件，这个时候才会通过调用下一层子组件的onStateChange方法通知
+        //组件是否渲染。====而事实上，没有被connect处理的父组件re-render后子组件根本不需要re-render（父组件都没有绑定到store，它的变更肯定不是因为store有变化。）===这句说的也不对，组件更新主要看shouldComponentUpdate
+        //返回什么,所以这地方应该重点关注的是selector.run在哪里会被调用，哪种情况会产生selector.shouldUpdate为true的结果，在connect里，componentWillReceiveProps会在接收props时或者props发生变更时调用selector.run方法=====
         //，上面提到的这种情况，由于componentDidUpdate一直存在，所以第一层子组件更新完后，按照声明周期调用了componentDidUpdate，
         //通知了下一层子组件，这地方，是没有必要的，而按照现在componentDidUpdate实现的方式，这种情况是可以避免的。
 
