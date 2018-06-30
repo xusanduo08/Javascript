@@ -5,14 +5,24 @@ import VisibleTodoList from '../containers/VisibleTodoList';
 import Button from "./button";
 import Container from "./Container"
 
-const App = () => (
-  <div>
-    <AddTodo />
-    <VisibleTodoList />
-    <Footer />
-    <Button />
-    <Container />
-  </div>
-)
+class App extends React.Component {
+    constructor(){
+        super()
+    }
+
+    componentWillReceiveProps(nextProps){
+        console.log('componentWillReceiveProps', nextProps)
+    }
+
+    render(){
+        return  (<div>
+            <AddTodo />
+            <VisibleTodoList />
+            <Footer />
+            <Button />
+            <Container />
+        </div>)
+    }
+}
 
 export default App

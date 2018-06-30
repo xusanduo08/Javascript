@@ -15,7 +15,6 @@ class ChildTwo extends React.Component {
     }
 
     shouldComponentUpdate(props, state, context){
-        console.log(context)
         if(context.value == 1){
             return false
         }

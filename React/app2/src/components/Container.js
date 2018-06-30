@@ -23,7 +23,7 @@ class Container extends React.Component {
     render(){
         return (
             <div>
-                <ChildOne />
+                <ChildOne data={this.state.value} />
                 <ChildTwo />
             </div>
         )

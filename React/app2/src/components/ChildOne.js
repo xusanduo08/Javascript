@@ -10,7 +10,6 @@ class ChildOne extends React.Component {
 
     handleChange= e => {
         this.context.changeValue(e.target.value);
-        
     }
 
     render(){

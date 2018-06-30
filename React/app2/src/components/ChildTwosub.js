@@ -5,13 +5,11 @@ import PropTypes from "react";
 class ChildTwosub extends React.Component {
     constructor(props, context){
         super()
-        setTimeout(() => {
-            console.log(context)
-        }, 2000)
+        
     }
 
     shouldComponentUpdate(props, state, context){
-        console.log(context);
+        
         return true;
     }
 
