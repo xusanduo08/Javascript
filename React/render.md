@@ -1,5 +1,7 @@
 ### `render`
 
+[原文链接](https://developmentarc.gitbooks.io/react-indepth/content/life_cycle/birth/component_render.html)
+
 ​	和生命周期中的其他方法不同，`render`方法一直存在于生命周期中。组件的诞生会调用`render`，组件在更新的过程中也会调用`render`。
 
 __在`render`中不能调用`setState`方法__
