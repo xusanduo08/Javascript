@@ -2,6 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 import ChildOne from "./ChildOne";
 import ChildTwo from "./ChildTwo";
+import Children1 from './Children1';
 
 class Container extends React.Component {
     constructor(props){
@@ -23,7 +24,9 @@ class Container extends React.Component {
     render(){
         return (
             <div>
-                <ChildOne data={this.state.value} />
+                <ChildOne data={this.state.value}>
+                    <Children1 />
+                </ChildOne>
                 <ChildTwo />
             </div>
         )

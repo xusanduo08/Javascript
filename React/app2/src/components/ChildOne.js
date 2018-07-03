@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
+
 class ChildOne extends React.Component {
     constructor(props){
         super()
@@ -13,12 +14,7 @@ class ChildOne extends React.Component {
     }
 
     render(){
-        return (
-            <div>
-                component1
-                <input onChange={this.handleChange} />
-            </div>
-        )
+        return this.props.children
     }
 }
 
