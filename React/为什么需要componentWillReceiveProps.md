@@ -2,7 +2,7 @@
 
 这篇文章主要讲的就是为什么需`componentWillReceiveProps`。
 
-组件接收的`props`发生改变时，`componentWillReceiveProps`方法会被调用（A=>B），但是`componentWillReceiveProp`s被调用`prop`s一定就发生改变了么，其实不是，(A=>B) != (B=>A)。
+组件接收到`props`时以及`props`发生改变时，`componentWillReceiveProps`方法会被调用（A=>B），但是当`componentWillReceiveProps`被调用时`props`一定就发生改变了么，其实不是，(A=>B) != (B=>A)。
 
 ```react
 class Component extends React.Component {
@@ -22,7 +22,7 @@ ReactDOM.render(<Component data={mydata} />, container);//更新
 ReactDOM.render(<Component data={mydata} />, container);//更新
 ```
 
-上面的代码运行后，控制台会打印几次数据？答案：2次。两次更新操作各打印一次，而且事实上，这两次的传入的`props`并没有改变。
+上面的代码运行后，控制台会打印几次数据？答案：2次。两次更新操作各打印一次，而且事实上，这两次传入的`props`并没有改变。
 
 
 
