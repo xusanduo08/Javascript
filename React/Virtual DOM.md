@@ -233,3 +233,103 @@ ReactDOM.render(
 ```
 
 ​	type仍然代表着原生的HTML元素，React会通过原生的DOM API来改变元素的属性（properties），并不会去从DOM树中移出节点。
+
+* 场景三：type变成了代表不同类型标签的字符串，或者干脆由字符串变成了一个组件
+
+```javascript
+// before update:
+{ type: 'div', props: { className: 'cn' } }
+
+// after update:
+{ type: 'span', props: { className: 'cn' } }
+```
+
+​	这种type发生改变的情况对于React来讲，React不会采取更新操作（type都变了，更新个毛），而是直接将原有元素连其子元素移除（卸载）。所以，替换DOM树顶层元素的代价非常昂贵，所幸的是，这种情况比较少见。
+
+​	有一点要记住，React使用`===`来比较type的值，所以如果type是个引用，则必须指向的是相同的函数或者同一个类的同一个实例才能返回true。
+
+* 场景四：type是个component
+
+  这种场景也是我们在React中经常用到的。
+
+  ```javascript
+  // before update:
+  { type: Table, props: { rows: rows } }
+
+  // after update:
+  { type: Table, props: { rows: rows } }
+  ```
+
+  或许你会说这看起来什么都没有改变，但事实是你可能是错的。
+
+​       如果type的值指向的是一个函数或者一个类，那么React在这个时候就会开始一致性校验的过程，会层层进入到组件内部，确保组件render方法的返回值没有发生改变（一定意义上防范副作用）。当碰上复杂的组件的时候，这种对组件的过滤和扫描的成本是很昂贵的。
+
+#### 处理子元素、子组件
+
+​	除了上面提到的四种场景外，我们还要说下当组件拥有一个以上的子组件时的React的行为：
+
+```javascript
+// ...
+props: {
+  children: [
+      { type: 'div' },
+      { type: 'span' },
+      { type: 'br' }
+  ]
+},
+// ...
+```
+
+​	上面这个组件有三个子元素，div、span、br，现在我们把子元素的布局顺序换一下：
+
+```javascript
+// ...
+props: {
+  children: [
+    { type: 'span' },
+    { type: 'div' },
+    { type: 'br' }
+  ]
+},
+// ...
+```
+
+​	这种情况会发生什么？
+
+​	当开始‘diffing’的时候，React开始比较props.children下的数组。React会按照数组的索引，将数组的当前值与数组之前的值一个一个进行比较：arr[0]和arr[0]比较，arr[1]和arr[1]比较，以此类推。每一次比较都会使用上面提到的四种场景和规则。在我们这个例子中，很显然，属于第三种场景，type都是字符串但值有所改变。这里有一种非常不经济的场景：想象一下我们有一个1000行的表格，我们需要将第一行移除掉。对于React来讲，第一个子元素被移除（数组中的第一个元素），那么剩下的999个子元素都要更新，因为剩下的元素在数组中的索引全部都发生了变化。
+
+​	不过，React有一种内置的方法来解决这个问题。如果元素带有一个key值，那么前后比较时会使用key值进行比较，而不是索引。只要key值是唯一的，那么React就会移动元素而不是删除元素然后在重建元素（React中所说的挂载和卸载）。
+
+```javascript
+// ...
+props: {
+  children: [ // Now React will look on key, not index
+    { type: 'div', key: 'div' },
+    { type: 'span', key: 'span' },
+    { type: 'br', key: 'bt' }
+  ]
+},
+// ...
+```
+
+#### 当state发生改变时
+
+​	现在我们来看下带有状态的组件（stateful component）：
+
+```javascript
+class App extends Component {
+  state = { counter: 0 }
+
+  increment = () => this.setState({
+    counter: this.state.counter + 1,
+  })
+
+  render = () => (<button onClick={this.increment}>
+    {'Counter: ' + this.state.counter}
+  </button>)
+}
+```
+
+​	组件state中有一个counter属性，点击button一次，counter值就会增加并且button内的文本内容也会改变。那么当这些动作发生时，页面上的DOM会有哪些动作？组件的哪部分会被重新计算和更新？
+
+​	当调用`this.setState`时会引起一次re-render，但并不是整个页面都re-render，只有当前组件和组件内部的子元素会被re-render。父元素以及兄弟元素不会受到影响。这对于想更新一整个DOM树上某一部分的情况来说是很方便的。
