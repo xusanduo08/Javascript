@@ -22,14 +22,15 @@ class Container extends React.Component {
     }
 
     render(){
-        return (
-            <div>
-                <ChildOne data={this.state.value}>
-                    <Children1 />
-                </ChildOne>
-                <ChildTwo />
-            </div>
-        )
+        return React.createElement(
+            'div',
+            {}, 
+            [
+                React.createElement(ChildOne, 
+                    {date:this.state.value}, 
+                    React.createElement(Children1))
+            ]
+            )
         
     }
 
