@@ -1,5 +1,7 @@
 ### React优化：Virtual DOM
 
+[原文链接](https://evilmartians.com/chronicles/optimizing-react-virtual-dom-explained)
+
 这篇文章主要介绍React的一下几个方面：
 
 1、React是如何将JSX渲染成页面；
@@ -64,7 +66,7 @@ React.createElement(
 
 ​	现在上面这个函数的调用有了5个参数：元素类型，属性对象，3个子类元素。因为其中一个元素也是React所知的原生的HTML标签（`<br />`），所以它也会被当成一个函数调用来处理。
 
-​	目前为止我们提到了两种类型的子类元素：一种是字符串，还有一种会调用`React.createElement`。另外还有几种值可以作为子类元素的参数：`false`,`null`,`undefined`,`true`，数组还有React组件。
+​	目前为止我们提到了两种类型的子类元素：一种是字符串，还有一种是调用`React.createElement`返回的结果。另外还有几种值可以作为子类元素的参数：`false`,`null`,`undefined`,`true`，数组还有React组件。
 
 ​	因为子类元素可以被放到一起作为一个元素来传递，所以数组也可以当成子元素。
 
@@ -333,3 +335,209 @@ class App extends Component {
 ​	组件state中有一个counter属性，点击button一次，counter值就会增加并且button内的文本内容也会改变。那么当这些动作发生时，页面上的DOM会有哪些动作？组件的哪部分会被重新计算和更新？
 
 ​	当调用`this.setState`时会引起一次re-render，但并不是整个页面都re-render，只有当前组件和组件内部的子元素会被re-render。父元素以及兄弟元素不会受到影响。这对于想更新一整个DOM树上某一部分的情况来说是很方便的。
+
+#### 解决问题
+
+​	我们准备了一个小的[demo](https://iadramelk.github.io/optimizing-react-demo/dist/before.html)，你可以从demo里看到一些常见的错误，现在我们来修复这些错误，这里有[源码](https://github.com/iAdramelk/optimizing-react-demo)。在正式开始之前，你需要安装[React Developer Tools](https://github.com/facebook/react-devtools)。
+
+​	首先我们看一下，是哪一个元素、什么时候引起了Virtual DOM更新。打开浏览器控制台中React的控制面板，然后选择Highlight Updates。
+
+![React devtool](./img/201807080839.png)
+
+​	现在尝试增加一行表格。你可以看到，页面上每个元素四周都会出现一个边框，这说明，当我们增加一行时，React重新计算和比较了一整个Virtual DOM tree。现在尝试点击一下按钮计数器，这时候可以看到当state发生变化时，只有当前组件以及它的子元素才会被更新----这正是当state发生变化时Virtual DOM的更新策略。
+
+​	React DevTools指出了问题所在，但没告诉我们具体的细节：特别是这些更新，是由diffing操作引起的还是说它们被卸载然后重新挂载了。为了找出原因，我们需要使用React内置的一个[工具](https://reactjs.org/docs/optimizing-performance.html#profiling-components-with-the-chrome-performance-tab)（该工具不适用于生产环境）。
+
+​	将?react_perf添加到你应用的URL后面，然后打开开发者工具的Performance面板。点击记录按钮然后操作表格--添加一些行，点击一些计数器--然后点击停止。
+
+![react_perf](./img/201807080900.png)
+
+​	我们主要关注结果中的User timing。放到时间轴，直到看到“React Tree Reconciliation”这一组和它的子项。这些都是我们的组件，它们旁边都写的更新（update）或者挂载（mount）。
+
+​	我们的大部分问题基本都属于下面这两类：
+
+* 组件（或者组件产生的其他分支）的每次更新都是卸载然后重新挂载（re-mounted）
+* 针对一个大的Virtual DOM树做一致性校验花费很昂贵，即使最终结果是没有发生任何变化。
+
+#### 解决问题：挂载/卸载
+
+​	我们已经知道了React是根据什么去更新Virtual DOM的了，也看到了更新后面的一些细节，现在让我们来解决一些问题，首先是挂载和卸载的问题。
+
+​	当你知道，一个包含多个子元素或者子组件的组件在内部其实使用数组的方式来盛装子元素时，你就可以很显著的提升性能。看例子：
+
+```
+<div>
+  <Message />
+  <Table />
+  <Footer />
+</div>
+```
+
+在virtual DOM中实际是这样：
+
+```javascript
+// ...
+props: {
+  children: [
+    { type: Message },
+    { type: Table },
+    { type: Footer }
+  ]
+}
+// ...
+```
+
+​	一个Message组件内部是一个div包含着一些文本，一个巨大的表格，大概有1000多行，这两个都是一个div的子元素，所以它们都被放在了父节点的props.children属性下，同时，它们都没有key值。React并不会在控制台提示我们给每个子元素添加一个key值，因为子元素是以列表参数的方式传递给React.createElement，并不是数组（And React will not even remind us to assign keys through console warnings, as children are being passed to the parent’s `React.createElement` as a list of arguments, not an array.----译者对这句话有些不明白，言外之意，直接用数组的方式传递子元素就会提示添加key值了么----是的，如果直接以数组方式传入子组件，控制台就是提示需要给数组中的元素添加key属性。
+
+```javascript
+index.js:2178 Warning: Each child in an array or iterator should have a unique "key" prop.
+
+Check the render method of `Container`. See https://fb.me/react-warning-keys for more information.
+    in ChildOne (created by Container)
+    in Container (at App.js:23)
+    in div (at App.js:18)
+    in App (at index.js:23)
+    in div (at index.js:22)
+    in Provider (at index.js:21)
+```
+
+）。
+
+​	现在我们去掉Message组件，只剩下Table和Footer。
+
+```javascript
+// ...
+props: {
+  children: [
+    { type: Table },
+    { type: Footer }
+  ]
+}
+// ...
+```
+
+​	在React看来，盛装子元素的数组发生了变化：children[0]本来放的是Message，现在放的是Table，同时因为不存在key值可以用来比较，所以只能比较type值，而这两者又都是指向函数的引用（指向的是不同的函数），因此，React在这地方会卸载然后重新加载页面上已经有的Table和它的子元素----1000多行的数据。
+
+​	你可以给子元素添加key值（这在这个例子中不是最好的方法）来解决问题，或者采用更好的方法：[短路逻辑](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Logical_Operators)----javascript和其他流行语言都有的一个特性：
+
+```javascript
+// Using a boolean trick
+<div>
+  {isShown && <Message />}
+  <Table />
+  <Footer />
+</div>
+```
+
+​	尽管Message被从页面中移除，父组件div的props.children数组依然含有三个元素，children[0]是一个原始布尔值，false。还记不记得，true/false，null和undefined都可以作为Virtual DOM中组件对象type字段的值？上面的代码最终编译成Virtual DOM如下面这样：
+
+```javascript
+// ...
+props: {
+  children: [
+    false, //  isShown && <Message /> evaluates to false
+    { type: Table },
+    { type: Footer }
+  ]
+}
+// ...
+```
+
+​	所以不管Message存不存在，props.children的索引不会变，diffing时，Table依然和Table比较（当type指向组件的引用时会进行diffing比较），而且这种比较比移除DOM然后再重新创建要快得多。
+
+​	现在来进阶的看一些东西。我们都喜欢用HOC（高阶组件）----使用一个组件作为入参，经过处理后返回另一个组件的函数：
+
+```javascript
+function withName(SomeComponent) {
+  // Computing name, possibly expensive...
+  return function(props) {
+    return <SomeComponent {...props} name={name} />;
+  }
+}
+```
+
+​	在使用时我们要小心一种写法：
+
+```javascript
+class App extends React.Component() {
+  render() {
+    // Creates a new instance on each render
+    const ComponentWithName = withName(SomeComponent);
+    return <SomeComponentWithName />;
+  }
+}
+```
+
+​	我们在上面这个组件的render方法里创建了一个高阶组件，当我们re-render的时候，Virtual DOM大概是这个样子：
+
+```javascript
+// On first render:
+{
+  type: ComponentWithName,
+  props: {},
+}
+
+// On second render:
+{
+  type: ComponentWithName, // Same name, but different instance
+  props: {},
+}
+```
+
+​	re-render时，React会去对ComponentWithName进行diffing比较，但是ComponentWithName两次指向的都不是同一个实例，全等比较（`===`）返回的是false，这时候就会发生re-mount。这种情况还会造成状态丢失，[看这里](https://github.com/facebook/react/blob/044015760883d03f060301a15beef17909abbf71/docs/docs/higher-order-components.md#dont-use-hocs-inside-the-render-method)。不过，解决这类问题的方法也很简单：在render外创建HOC：
+
+```javascript
+// Creates a new instance just once
+const ComponentWithName = withName(Component);
+
+class App extends React.Component() {
+  render() {
+    return <ComponentWithName />;
+  }
+}
+```
+
+#### 解决问题：更新
+
+​	现在，除了必要情况，我们已经能确保不会再有re-mount的烦恼了。但是，当靠近DOM树根部的一些组件发生变化时，会引起React对其及所有其子组件进行diffing过程。如果DOM树结构复杂，这笔开销是很昂贵的。不过，可以避免。
+
+​	如果有一种方法可以告诉React当前组件不用看了，我们很确定它没有变化，那就太好了。很幸运，这种方法存在----shouldComponentUpdate----这是组件生命周期中的一个方法。组件re-render前，这个方法都会被调用一次，并以props和state的最新值作为入参。有了这个方法和参数，我们就可以很自由的比较props和state前后各自的变化然后决定是否更新组件。如果方法返回false，React不会re-render组件也更不会再去关心子元素。
+
+​	通常，对props和state做一次浅比较就一够了：如果顶层的数据发生了改变，就没必要进行更深一层的比较了，直接进行更新；相反，如果顶层数据没有改变，则就不进行更新。浅比较并不是Javascript的特性，但是有很多[工具库](https://github.com/dashed/shallowequal)可以帮我们做这些事情。有了浅比较，我们可以这样写代码：
+
+```javascript
+class TableRow extends React.Component {
+
+  // will return true if new props/state are different from old ones
+  shouldComponentUpdate(nextProps, nextState) {
+    const { props, state } = this;
+    return !shallowequal(props, nextProps)
+           && !shallowequal(state, nextState);
+  }
+
+  render() { /* ... */ }
+}
+```
+
+​	但是React有一个内置的组件类----React.pureComponent----它和React.Component类似，不同在于前者已经用浅比较把shouldComponentUpdate实现好了，所以你不用再去在shouldComponentUpdate里写浅比较了。
+
+​	继承PureComponent类然后就可以享受高性能，这听起来是有点傻瓜式的用法。但其实不是那样，有些地方还是要注意的，看例子：
+
+```javascript
+<Table
+    // map returns a new instance of array so shallow comparison will fail
+    rows={rows.map(/* ... */)}
+    // object literal is always "different" from predecessor
+    style={ { color: 'red' } }
+    // arrow function is a new unnamed thing in the scope, so there will always be a full diffing
+    onUpdate={() => { /* ... */ }}
+/>
+```
+
+​	上面的代码展示了三种错误的例子，要尽量避免。
+
+​	如果你能保证你在render函数之外定义对象、数组和函数，并确保在组件调用期间不发生改变，那正常情况下你的组件在性能上不会有太大问题。
+
+​	你可以看下更新后的[demo](https://iadramelk.github.io/optimizing-react-demo/dist/after.html)，这里，表格的每一行都是继承的PureComponent。打开React DevTools的Hight Updates选项，你会看到，只有表格和新添加的行发生了渲染，其他行保持着不变。
+
+​	如果你想让所有组件都继承自PureComponent，还是不要这么做。浅比较props和state并不是免费的，对于大多数组件来说甚至有点不值得，因为对它们来说，浅比较会比diffing算法花费更长的时间。
