@@ -20,7 +20,7 @@
 
 ​	一般当问题出现时，页面会出现输入框反应迟缓，复选框选中需要很久，弹窗迟迟不出现等现象。
 
-​	为了更好的解决这类问题，我们从组件定义开始出发到组件在页面上渲染出来为止，完成React组件的一整个生命旅程。
+​	为了更好的解决这类问题，我们从组件定义出发到组件在页面上渲染出来为止，完成React组件的一整个生命旅程。
 
 #### JSX语法
 
@@ -42,7 +42,7 @@ React.createElement(
 );
 ```
 
-​	仔细看一下上面这个函数的调用。这个函数的调用有三个入参：第一个参数是元素类型（element type），如果要渲染一个原生的HTML标签，则取值代表HTML标签的字符串；第二个参数是元素上的属性所组成的对象，如果元素上没有属性，那么这个对象就是一个空对象；剩下的参数都是元素的子类元素。因为文本内容也是子类元素，所以字符串’Content!‘就被放到了第三个参数的位置。
+​	仔细看一下上面这个函数的调用。这个函数的调用有三个入参：第一个参数是元素类型（element type），如果要渲染一个原生的HTML标签，则取值为代表HTML标签的字符串；第二个参数是元素上的属性所组成的对象，如果元素上没有属性，那么这个对象就是一个空对象；剩下的参数都是元素的子类元素。因为文本内容也是子类元素，所以字符串’Content!‘就被放到了第三个参数的位置。
 
 ​	当有多个子类元素的时候：
 
@@ -78,7 +78,7 @@ React.createElement(
 )
 ```
 
-​	React的厉害不在于我们可以在JSX中使用原生的HTML标签，而主要在于在JSX中还可以引入另一个我们自己创建的组件，比如：
+​	React的厉害不在于我们可以在JSX中使用原生的HTML标签，而主要在于在JSX中还可以引入我们自己创建的组件，比如：
 
 ```jsx
 function Table({ rows }) {
@@ -169,7 +169,7 @@ React.createElement(
 }
 ```
 
-​	注意，在`React.createElement`中，子类元素还是单独列出来的参数，到这里，变成了以children为key值的输入props对象的一个属性。由此可以看出，无论children以什么样的样式传递，数组还是列表，最终在虚拟DOM中都会以数组形式放到一起。
+​	注意，在`React.createElement`中，子类元素还是单独列出来的参数，到这里，变成了以children为key值的属于props对象的一个属性。由此可以看出，无论children以什么样的样式传递，数组还是列表，最终在虚拟DOM中都会以数组形式放到一起。
 
 ​	说的明白些，我们可以在JSX中就把children作为属性传递到props中，结果都是一样的：
 
@@ -234,7 +234,7 @@ ReactDOM.render(
 { type: 'div', props: { className: 'cnn' } }
 ```
 
-​	type仍然代表着原生的HTML元素，React会通过原生的DOM API来改变元素的属性（properties），并不会去从DOM树中移出节点。
+​	type仍然代表着原生的HTML元素，React会通过原生的DOM API来改变元素的属性（properties），并不会从DOM树中移出节点。
 
 * 场景三：type变成了代表不同类型标签的字符串，或者干脆由字符串变成了一个组件
 
@@ -300,7 +300,7 @@ props: {
 
 ​	当开始‘diffing’的时候，React开始比较props.children下的数组。React会按照数组的索引，将数组的当前值与数组之前的值一个一个进行比较：arr[0]和arr[0]比较，arr[1]和arr[1]比较，以此类推。每一次比较都会使用上面提到的四种场景和规则。在我们这个例子中，很显然，属于第三种场景，type都是字符串但值有所改变。这里有一种非常不经济的场景：想象一下我们有一个1000行的表格，我们需要将第一行移除掉。对于React来讲，第一个子元素被移除（数组中的第一个元素），那么剩下的999个子元素都要更新，因为剩下的元素在数组中的索引全部都发生了变化。
 
-​	不过，React有一种内置的方法来解决这个问题。如果元素带有一个key值，那么前后比较时会使用key值进行比较，而不是索引。只要key值是唯一的，那么React就会移动元素而不是删除元素然后在重建元素（React中所说的挂载和卸载）。
+​	不过，React有一种内置的方法来解决这个问题。如果元素带有一个key值，那么前后比较时会使用key值进行比较，而不是索引。只要key值是唯一的，那么React就会移动元素而不是删除元素然后再重建元素（React中所说的挂载和卸载）。
 
 ```javascript
 // ...
@@ -352,7 +352,7 @@ class App extends Component {
 
 ![react_perf](./img/201807080900.png)
 
-​	我们主要关注结果中的User timing。放到时间轴，直到看到“React Tree Reconciliation”这一组和它的子项。这些都是我们的组件，它们旁边都写的更新（update）或者挂载（mount）。
+​	我们主要关注结果中的User timing。放大时间轴，直到看到“React Tree Reconciliation”这一组和它的子项。这些都是我们的组件，它们旁边都写的更新（update）或者挂载（mount）。
 
 ​	我们的大部分问题基本都属于下面这两类：
 
@@ -387,7 +387,7 @@ props: {
 // ...
 ```
 
-​	一个Message组件内部是一个div包含着一些文本，一个巨大的表格，大概有1000多行，这两个都是一个div的子元素，所以它们都被放在了父节点的props.children属性下，同时，它们都没有key值。React并不会在控制台提示我们给每个子元素添加一个key值，因为子元素是以列表参数的方式传递给React.createElement，并不是数组（And React will not even remind us to assign keys through console warnings, as children are being passed to the parent’s `React.createElement` as a list of arguments, not an array.----译者对这句话有些不明白，言外之意，直接用数组的方式传递子元素就会提示添加key值了么----是的，如果直接以数组方式传入子组件，控制台就是提示需要给数组中的元素添加key属性。
+​	一个Message组件内部是一个div包含着一些文本，一个巨大的表格，大概有1000多行，这两个都是一个div的子元素，所以它们都被放在了父节点的props.children属性下，同时，它们都没有key值。React并不会在控制台提示我们给每个子元素添加一个key值，因为子元素是以列表参数的方式传递给React.createElement的，并不是数组（And React will not even remind us to assign keys through console warnings, as children are being passed to the parent’s `React.createElement` as a list of arguments, not an array.----译者对这句话有些不明白，言外之意，直接用数组的方式传递子元素就会提示添加key值了么----是的，如果直接以数组方式传入子组件，控制台就是提示需要给数组中的元素添加key属性。
 
 ```javascript
 index.js:2178 Warning: Each child in an array or iterator should have a unique "key" prop.
@@ -416,7 +416,7 @@ props: {
 // ...
 ```
 
-​	在React看来，盛装子元素的数组发生了变化：children[0]本来放的是Message，现在放的是Table，同时因为不存在key值可以用来比较，所以只能比较type值，而这两者又都是指向函数的引用（指向的是不同的函数），因此，React在这地方会卸载然后重新加载页面上已经有的Table和它的子元素----1000多行的数据。
+​	在React看来，盛装子元素的数组发生了变化：children[0]本来放的是Message，现在放的是Table，同时因为不存在key值可以用来比较，所以只能比较type值，而这两者又都是指向函数的引用（指向的是不同的函数），因此，React在这地方会卸载然后重新加载页面上存在过的Table和它的子元素----1000多行的数据。
 
 ​	你可以给子元素添加key值（这在这个例子中不是最好的方法）来解决问题，或者采用更好的方法：[短路逻辑](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Logical_Operators)----javascript和其他流行语言都有的一个特性：
 
@@ -443,7 +443,7 @@ props: {
 // ...
 ```
 
-​	所以不管Message存不存在，props.children的索引不会变，diffing时，Table依然和Table比较（当type指向组件的引用时会进行diffing比较），而且这种比较比移除DOM然后再重新创建要快得多。
+​	所以不管Message存不存在，props.children内部的索引不会变，diffing时，Table依然和Table比较（当type指向组件的引用时会进行diffing比较），而且这种比较比移除DOM然后再重新创建要快得多。
 
 ​	现在来进阶的看一些东西。我们都喜欢用HOC（高阶组件）----使用一个组件作为入参，经过处理后返回另一个组件的函数：
 
