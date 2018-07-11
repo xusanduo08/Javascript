@@ -8,7 +8,7 @@
 
 ​	可以在`componentWillUpdate`方法里为下一次的更新做准备。如果想获取到老的props或者state，可以通过`this.props`和`this.state`获取，有了新旧的props和state，我们就可以根据需要做一些计算或者改变。
 
-​	有一点要注意，在`componentWillUpdate`内部不能调用`this.setState`方法（这点和`componentWillMount`不一样），因为`this.setState`会引起下一次的更新过程，`componentWillUpdate`会被再次调用，然后方法里又调用了`this.setState`...，这就陷入了死循环中。所以，__不要在`componentWillUpdate`中调用`this.setState`方法__。
+​	有一点要注意，在`componentWillUpdate`内部不能调用`this.setState`方法（这点和`componentWillMount`不一样），因为`this.setState`会引起下一次的更新过程，`componentWillUpdate`会被再次调用（前提：`shouldComponentUpdate`默认返回true，或者如果此时一直满足你在`shouldComponentUpdate`方法中设置的条件，然后一直返回true），然后方法里又调用了`this.setState`...，这就陷入了死循环中。所以，__不要在`componentWillUpdate`中调用`this.setState`方法__。
 
 ​	另外还有一些`componentWillUpdate`的使用场景，比如根据state的变化设置变量，dispatch事件或者开始动画等：
 
