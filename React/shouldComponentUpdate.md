@@ -71,7 +71,7 @@ this.setState({ data: [1, 2, 3] });
 <MyComponent data={ this.state.data } />
 ```
 
-​	如果在MyComponent使用`shallowCompare`来比较变化前后的`props.data`，那么它会以为没变，因为`props.data`前后都指向的是同一个数组（`currentProps.date === nextProps.data`）。因为组件没有感知到数据变化，所以也就不会去进行更新操作。我们的代码让数组发生了突变，所以，代码这里的是不纯的。
+​	如果组件MyComponent使用`shallowCompare`来比较变化前后的`props.data`，那么它会以为没变，因为`props.data`前后都指向的是同一个数组（`currentProps.date === nextProps.data`）。因为组件没有感知到数据变化，所以也就不会去进行更新操作。我们的代码让数组发生了突变，所以，代码是不纯的。
 
 ​	在Redux中，要求reducer必须是纯函数，也是为了避免数据发生突变的情况。如果你需要改变数据内某个属性，你需要克隆这份数据，并确保返回一整个最新的数据对象。这样做，能确保`shallowCompare`这个方法察觉到数据变化以便组件能够更新。
 
@@ -83,7 +83,7 @@ this.setState({ data: [1, 2, 3] });
 
 ![nested Component structure](./img/07022148.png)
 
-​	当组件A更新时，子组件也会随着更新。如果组件嵌套层数较深的话，对性能会造成较大浪费。可以给A组件添加`shouldComponentUpdate`方法，避免不必要的组件更新。
+​	当组件A更新时，子组件也会随着更新。如果组件嵌套层数较深的话，对性能会造成较大浪费。可以在A组件的`shouldComponentUpdate`方法内添加逻辑判断，避免不必要的组件更新。
 
 #### `forceUpdate`方法
 
