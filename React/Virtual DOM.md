@@ -64,7 +64,7 @@ React.createElement(
 )
 ```
 
-​	现在上面这个函数的调用有了5个参数：元素类型，属性对象，3个子类元素。因为其中一个元素也是React所知的原生的HTML标签（`<br />`），所以它也会被当成一个函数调用来处理。
+​	现在上面这个函数的调用有了5个参数：元素类型，属性对象，3个子类元素。因为其中一个元素也是一个原生的HTML标签（`<br />`），所以为了让React识别它，也需要通过`React.createElement`的方式来表示。
 
 ​	目前为止我们提到了两种类型的子类元素：一种是字符串，还有一种是调用`React.createElement`返回的结果。另外还有几种值可以作为子类元素的参数：`false`,`null`,`undefined`,`true`，数组还有React组件。
 
@@ -108,7 +108,7 @@ function Table({ rows }) {
 React.createElement(Table, { rows: rows });
 ```
 
-​	这地方要注意，第一个参数已经不是一个描述HTML标签的字符串了，变成了一个刚刚定义组建的函数的一个引用。组建的属性（attributes）就是现在的props。
+​	这地方要注意，第一个参数已经不是一个描述HTML标签的字符串了，变成了一个刚刚定义组件的函数的一个引用。组建的属性（attributes）就是现在的props。
 
 #### 把组件渲染到页面上
 
@@ -126,7 +126,7 @@ ReactDOM.render(
 );
 ```
 
-​	当`ReactDOM.render`被调用时，`React.createElement`也会被调用并返回下面的对象：
+​	当`ReactDOM.render`运行时，`React.createElement`会被调用并返回下面的对象：
 
 ```javascript
 // There are more fields, but these are most important to us
@@ -208,7 +208,7 @@ ReactDOM.render(
 );
 ```
 
-​	第二次调用时，上面的代码的表现已经和我们所看到的不一样了。它不会重新创建整个DOM节点然后把这些节点放到页面上，而是首先先通过一致性校验算法--diffing算法--来判断节点树中哪些部分需要更新，哪些根本不需要动。
+​	第二次调用时，上面的代码的表现已经和我们所看到的不一样了。它不会重新创建整个DOM节点然后把这些节点放到页面上，而是通过一致性校验算法--diffing算法--来判断节点树中哪些部分需要更新，哪些根本不需要动。
 
 ​	所以，diffing算法到底是怎么工作的？我们来看下下面几个场景，理解这几个场景对优化我们的应用很有帮助。首先我们看到的是虚拟DOM中用来代表节点的对象。
 
@@ -499,7 +499,7 @@ class App extends React.Component() {
 
 #### 解决问题：更新
 
-​	现在，除了必要情况，我们已经能确保不会再有re-mount的烦恼了。但是，当靠近DOM树根部的一些组件发生变化时，会引起React对其及所有其子组件进行diffing过程。如果DOM树结构复杂，这笔开销是很昂贵的。不过，可以避免。
+​	现在，除了必要情况，我们已经能确保不会再有re-mount的烦恼了。但是，当靠近DOM树根部的一些组件发生变化时，会引起React对其及其所有子组件进行diffing的过程。如果DOM树结构复杂，这笔开销是很昂贵的。不过，可以避免。
 
 ​	如果有一种方法可以告诉React当前组件不用看了，我们很确定它没有变化，那就太好了。很幸运，这种方法存在----shouldComponentUpdate----这是组件生命周期中的一个方法。组件re-render前，这个方法都会被调用一次，并以props和state的最新值作为入参。有了这个方法和参数，我们就可以很自由的比较props和state前后各自的变化然后决定是否更新组件。如果方法返回false，React不会re-render组件也更不会再去关心子元素。
 
