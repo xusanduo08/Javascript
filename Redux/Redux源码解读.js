@@ -116,21 +116,21 @@ class Connect extends Component {  //实际最终返回的是connect组件
     componentWillReceiveProps(nextProps) {
         /*
             2018.6.29日注释：
-            注意这地方，当组件接收的props改变时（一般connect是直接订阅store的，正常在使用的时候都没有说直接向connect传props的情况，但不是不可以传），这个函数就会执行。
-        这时候，selector.run就会运行，因为props确实改变了，所以selector.shouldComponentUpdate会变成true，接着组件的componentShouldUpdate运行，运行结果返回true，
+            注意这地方，当组件接收的props改变时（一般connect是直接订阅store的，正常在使用的时候都没有说直接向connect返回的组件传props的情况，但不是不可以传），这个函数就会执行。
+        这时候，selector.run就会运行，如果props确实改变了，则selector.shouldComponentUpdate会变成true，接着组件的componentShouldUpdate运行，运行结果返回true，
         然后，组件开始re-render，re-render之后接着执行componentDidUpdate--这个地方就容易有问题了--因为为了确保子组件在父组件之后渲染，componentDidUpdate负责的是本组件render之
         后通知子组件执行各自的onStateChange函数，这地方父组件因为props改变触发re-render，那这种情况是否要通知子组件呢？答案：不需要。
             为什么？
-            connect组件是直接订阅store的，组件内部的onStateChange方法在store发生改变时就会被触发并计算出最新的props传入到connect包裹的真正的组件内部。所以，这地方要明白，onStateChange只是
-        用来响应state的变化而存在的，如果state不发生改变，onStateChange就不应该被触发。好了，看看我们上面提到的情况，一个父connect组件嵌套一个子connect组件，父组件接收外界传入的props渲染自身。当父组件的props
+            connect组件是订阅store的（不管简洁还是直接），组件内部的onStateChange方法在store发生改变时就会被触发并计算出最新的props并由connect传给其包裹的组件内部。所以，这地方要明白，onStateChange只是
+        用来响应state的变化而存在的，如果state不发生改变，onStateChange就没必要也不应该被触发。好了，看看我们上面提到的情况，一个父connect组件嵌套一个子connect组件，父组件接收外界传入的props渲染自身。当父组件的props
         发生改变时，父组件会开始re-render过程，结束后执行componentDidUpdate方法，为了实现子组件在父组件之后渲染的效果，componentDidUpdate内部实际执行的是通知子组件运行自己的onStateChange方法。
-        但是父组件只是因为自己本身的props改变而发生的re-render，store是没有改变的，所以没有必要通知子组件运行各自的onStateChange方法，那么我们就需要在componentDidUpdate内部做一个判断，判断当前是不是因为state改变
+        但是父组件只是因为自己本身的props改变而发生的re-render，并不是store改变引起的，所以没有必要通知子组件运行各自的onStateChange方法，那么我们就需要在componentDidUpdate内部做一个判断，判断当前是不是因为state改变
         而引起的re-render，如果是就通知子组件，不是就不通知，但是有另一个更好的方法实现相同的效果，可以不用每次都判断。
             那么，该如何做呢？
             答案：把componentDidUpdate方法的实现放在组件的onStateChange方法内部。首先，onStateChange方法只会因为state改变而被调用，如果onStateChange被调用了，说明state发生了改变，那么这时候不管父组件是否要re-render
-            都是要通知子组件的。onStateChange内部会判断组件是否需要更新，如果需要，则将notifyNestedSubsOnComponentDidUpdate赋值到componentDidUpdate上，然后组件渲染完毕后就会执行notifyNestedSubsOnComponentDidUpdate方法（
-            这样可以确保子组件在父组件之后渲染）；如果不需要，则直接执行notifyNestedSubs通知子组件。同时，在执行notifyNestedSubsOnComponentDidUpdate内部，又会将componentDidUpdate重新赋值为undefined，这样其他方式引起的
-            组件re-render就没法再re-render之后通知子组件了，而同时又能确保state发生改变时通知到子组件。
+        都是要通知子组件的。onStateChange内部会判断组件是否需要更新，如果需要，则将notifyNestedSubsOnComponentDidUpdate赋值到componentDidUpdate上，然后组件渲染完毕后就会执行notifyNestedSubsOnComponentDidUpdate方法（
+        这样可以确保子组件在父组件之后渲染）；如果不需要，则直接执行notifyNestedSubs通知子组件。同时，在执行notifyNestedSubsOnComponentDidUpdate内部，又会将componentDidUpdate重新赋值为undefined，这样其他方式引起的
+        组件re-render就没法再re-render之后通知子组件了，而同时又能确保state发生改变时通知到子组件。
 
         */
         this.selector.run(nextProps)
