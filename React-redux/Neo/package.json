@@ -1,0 +1,18 @@
+{
+  "name": "neo",
+  "version": "1.0.0",
+  "description": "something like react-redux",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "start": "react-scripts start"
+  },
+  "author": "mfs",
+  "license": "ISC",
+  "dependencies": {
+    "react": "^16.4.1",
+    "react-dom": "^16.4.1",
+    "react-scripts": "^1.1.4",
+    "redux": "^4.0.0"
+  }
+}
