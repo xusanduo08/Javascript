@@ -13,6 +13,7 @@ class Provider extends React.Component {
         }
     }
     render(){
+        console.log(this.props.store)
         return React.Children.only(this.props.children)
     }
 }

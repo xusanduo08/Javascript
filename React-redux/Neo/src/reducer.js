@@ -1,7 +1,7 @@
 import {combineReducers} from "redux";
 
 function input(state, action){
-    return action.input.toUpperCase
+    return "aaa"
 }
 
-export default combineReducers(input);
+export default combineReducers({input});

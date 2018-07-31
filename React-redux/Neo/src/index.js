@@ -4,6 +4,7 @@ import ReactDOM from "react-dom";
 import {createStore} from "redux";
 import input from "./reducer.js";
 import Provider from "./Provider.js";
+import connect from "./connect.js";
 
 const store = createStore(input);
 
@@ -19,9 +20,14 @@ class App extends React.Component {
     }
 }
 
+const ConApp = connect(
+    state => ({input:state.input}),
+    dispatch => ({in:dispatch})
+)(App);
+
 ReactDOM.render(
     <Provider store={store}>
-        <App/>
+        <ConApp/>
     </Provider>,
     document.getElementById("root")
 )
