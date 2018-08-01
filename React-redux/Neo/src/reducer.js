@@ -24,6 +24,7 @@ function VisibilityFilter(state= SHOW_ALL, action){
 function todos(state=[], action){
     switch(action.type){
         case ADD_TODO:
+        console.log(111)
             return [
                 ...state,
                 {
