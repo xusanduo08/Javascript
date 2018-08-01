@@ -1,5 +1,7 @@
 import { Component, createElement } from 'react';
 import { PropTypes } from 'prop-types';
+import dealMapDispatchToProps from './dealMapDispatchToProps.js'
+import dealMapStateToProps from './dealMapStateToProps.js';
 /*
   react-redux的主要功能就是让react的组件与redux的store关联起来，也就是订阅到store上。
   这份工作靠的主要就是connect方法。
@@ -13,27 +15,28 @@ import { PropTypes } from 'prop-types';
 function connect(mapStateToProps, mapDispatchToProps) {
     //如何获取到store，从上下文中获取，由Provider将store放到上下文中
 
+    const initMapDispatchToProps = dealMapDispatchToProps(mapDispatchToProps);
+    const initMapStateToProps = dealMapStateToProps(mapStateToProps);
     return function (component) {
 
         class Connect extends Component {
             constructor(props, context) {
                 super(props, context);
                 this.store = this.context.store;
-                console.log(this.context.store);
                 this.init();  // 初始化
             }
 
             init() {
                 //从store中拿到state，并用mapStateToProsp、mapDispatchToProps计算出要传入component的props
-                this.stateProps = mapStateToProps(state);
-                this.dispatchProps = mapDispatchToProps(state);
-                this.store.subscribe(this.onStateChange);
+                this.stateProps = initMapStateToProps(this.store.getState());
+                this.dispatchProps = initMapDispatchToProps(this.store.dispatch);
+                this.store.subscribe(this.onStateChange.bind(this));
             }
 
             onStateChange() {
                 //state如果发生变化，就要重新计算props值，并让组件re-render。
-                //this.stateProps = mapStateToProps(state);
-                //this.dispatchProps = mapDispatchToProps(state);
+                this.stateProps = initMapStateToProps(this.store.getState());
+                this.dispatchProps = initMapDispatchToProps(this.store.dispatch);
                 this.setState({});  // 仅为触发组件re-render过程。
             }
 
@@ -44,7 +47,7 @@ function connect(mapStateToProps, mapDispatchToProps) {
         }
 
         Connect.contextTypes = {
-            store: PropTypes.isRequired
+            store: PropTypes.object
         }
         return Connect;
     }
