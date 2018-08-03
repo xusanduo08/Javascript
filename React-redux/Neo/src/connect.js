@@ -29,11 +29,14 @@ function connect(mapStateToProps, mapDispatchToProps) {
                 
             }
 
+            componentDidMount(){
+                this.store.subscribe(this.onStateChange.bind(this));
+            }
+
             init() {
                 //从store中拿到state，并用mapStateToProsp、mapDispatchToProps计算出要传入component的props
                 this.stateProps = initMapStateToProps(this.store.getState());
                 this.dispatchProps = initMapDispatchToProps(this.store.dispatch);
-                this.store.subscribe(this.onStateChange.bind(this));
             }
 
             onStateChange() {
