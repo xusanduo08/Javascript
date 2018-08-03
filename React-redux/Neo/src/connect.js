@@ -12,8 +12,8 @@ import dealMapStateToProps from './dealMapStateToProps.js';
   我们先考虑只有mapStateToProps和mapDispatchToProps两个参数，有其他参数的情况我们先按住不表。
 */
 
+
 function connect(mapStateToProps, mapDispatchToProps) {
-    //如何获取到store，从上下文中获取，由Provider将store放到上下文中
 
     const initMapDispatchToProps = dealMapDispatchToProps(mapDispatchToProps);
     const initMapStateToProps = dealMapStateToProps(mapStateToProps);
@@ -22,8 +22,11 @@ function connect(mapStateToProps, mapDispatchToProps) {
         class Connect extends Component {
             constructor(props, context) {
                 super(props, context);
-                this.store = this.context.store;
-                this.init();  // 初始化
+                this.store = this.context.store; //从上下文中获取store，由Provider将store放到上下文中
+                if(Boolean(mapStateToProps)){
+                    this.init();  // 如果mapStateToProps没有传递的话，则connect组件不会去订阅store的变化。
+                }
+                
             }
 
             init() {
