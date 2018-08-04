@@ -14,7 +14,7 @@ class ChildOne extends React.Component {
 
     render(){
         setTimeout(() => {
-            this.props.name = 2000
+            //this.props.name = 2000
         }, 2000)
         return this.props.children
     }
