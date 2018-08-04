@@ -1,5 +1,5 @@
 
-//订阅实例，用来订阅store，并管理子组件的定于
+//订阅实例，用来订阅store，并管理组件的订阅
 
 export default class Subscription {
   constructor(store, onStateChange) {
