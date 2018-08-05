@@ -49,6 +49,16 @@ function connect(mapStateToProps, mapDispatchToProps) {
         this.setState({});  // 仅为触发组件re-render过程。
       }
 
+      //组件卸载时要释放掉空间
+      componentWillUnmount(){
+          if(this.subscription){
+            this.subscription.tryUnsubscribe();
+          }
+          this.store = null;
+          this.selector = null;
+          this.subscription = null;
+      }
+
       render() {
         return createElement(component, { ...this.selector.props });
       }
