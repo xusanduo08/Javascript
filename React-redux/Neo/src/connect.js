@@ -36,31 +36,36 @@ function connect(mapStateToProps, mapDispatchToProps) {
         if (Boolean(mapStateToProps)) {
           this.subscription.trySubscribe()
         }
+        this.selector.run(this.props);
       }
 
       init() {
         //从store中拿到state，并用mapStateToProsp、mapDispatchToProps计算出要传入component的props
-        this.selector.run(this.store);
+        this.selector.run(this.props);
       }
 
       onStateChange() {
         //state如果发生变化，就要重新计算props值，并让组件re-render。
-       this.selector.run(this.store);
+        this.selector.run(this.props);
         this.setState({});  // 仅为触发组件re-render过程。
       }
 
       //组件卸载时要释放掉空间
-      componentWillUnmount(){
-          if(this.subscription){
-            this.subscription.tryUnsubscribe();
-          }
-          this.store = null;
-          this.selector = null;
-          this.subscription = null;
+      componentWillUnmount() {
+        if (this.subscription) {
+          this.subscription.tryUnsubscribe();
+        }
+        this.store = null;
+        this.selector = null;
+        this.subscription = null;
+      }
+
+      addExtraProps(props) {
+        return {...props};  // 将传递到connect组件上的props也传给connect内部的组件
       }
 
       render() {
-        return createElement(component, { ...this.selector.props });
+        return createElement(component, this.addExtraProps(this.selector.props));
       }
 
     }

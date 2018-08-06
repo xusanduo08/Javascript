@@ -8,8 +8,8 @@ export default class Selector {
         this.props = {};
     }
 
-    run(store){
-        this.props =  {...this.initMapDispatchToProps(this.store.dispatch), ...this.initMapStateToProps(this.store.getState())};
+    run(props){
+        this.props =  {...this.initMapDispatchToProps(this.store.dispatch), ...this.initMapStateToProps(this.store.getState()), ...props};
         return this.props;
     }
 }
