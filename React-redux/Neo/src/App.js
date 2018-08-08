@@ -4,7 +4,6 @@ import connect from "./connect.js";
 class App extends React.Component {
 
     render(){
-        console.log(this.props.todos)
         return (
             <div onClick={this.props.add}>
                 context is :
@@ -22,5 +21,7 @@ export default  connect(
                 dispatch({type: 'ADD_TODO', text:"123"})
             }
         }
-    }
+    },
+    undefined,
+    {withRef:true}
 )(App);

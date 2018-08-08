@@ -12,10 +12,21 @@ import Selector from './selectorFactory';
     export default connect(mapStateToProps, mapDispatchToProps)(component)
 
   我们先考虑只有mapStateToProps和mapDispatchToProps两个参数，有其他参数的情况我们先按住不表。
+  
+  2018.8.7:将connect接收的props传递给内部组件
+  2018.8.9：处理connect组件含有子组件的情况
 */
 
 
-function connect(mapStateToProps, mapDispatchToProps) {
+function connect(
+  mapStateToProps,
+  mapDispatchToProps,
+  mergeProps,
+  {
+    withRef = false, // 如果这个参数为true，那么被包裹的组件会通过getWrappedInstance()方法被暴露出来。
+    ...extraOptions
+  }
+) {
 
   const initMapDispatchToProps = dealMapDispatchToProps(mapDispatchToProps);
   const initMapStateToProps = dealMapStateToProps(mapStateToProps);
@@ -27,6 +38,7 @@ function connect(mapStateToProps, mapDispatchToProps) {
         this.store = this.context.store; //从上下文中获取store，由Provider将store放到上下文中
         this.subscription = new Subscription(this.store, this.onStateChange.bind(this)); // 抽取订阅动作到订阅实例中，便于管理
         this.selector = new Selector(initMapStateToProps, initMapDispatchToProps, this.store)    //selector用来计算状态
+        this.setWrappedInstance = this.setWrappedInstance.bind(this);
         if (Boolean(mapStateToProps)) {
           this.init();  // 如果mapStateToProps没有传递的话，则connect组件不会去订阅store的变化。
         }
@@ -37,6 +49,7 @@ function connect(mapStateToProps, mapDispatchToProps) {
           this.subscription.trySubscribe()
         }
         this.selector.run(this.props);
+        console.log(this.getWrappedInstance())
       }
 
       init() {
@@ -60,8 +73,23 @@ function connect(mapStateToProps, mapDispatchToProps) {
         this.subscription = null;
       }
 
-      addExtraProps(props) {
-        return {...props};  // 将传递到connect组件上的props也传给connect内部的组件
+      getWrappedInstance(){ //获取被包裹组件实例的引用
+        return this.wrappedInstance;
+      }
+      
+      setWrappedInstance(ref){
+        this.wrappedInstance = ref;
+      }
+
+      addExtraProps(props) {  // 将传递到connect组件上的props也传给connect内部的组件
+        if(!withRef){
+          return props;
+        }
+        const withExtras = {...props};
+        if(withRef){   // 是否将被包裹组件的实例暴露出来
+          withExtras.ref = this.setWrappedInstance;
+        }
+        return withExtras;
       }
 
       render() {
