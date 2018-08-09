@@ -8,6 +8,8 @@ class App extends React.Component {
             <div onClick={this.props.add}>
                 context is :
                 {this.props.todos.length}
+                <br />
+                渲染次数：{this.props.renderCounts}
             </div>
         )
     }
@@ -23,5 +25,8 @@ export default  connect(
         }
     },
     undefined,
-    {withRef:true}
+    {
+        withRef:true,
+        renderCountProp: "renderCounts" //组件props中将含有renderCounts属性，其值为组件的重复渲染次数
+    }
 )(App);
