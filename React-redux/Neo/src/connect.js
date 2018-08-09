@@ -15,7 +15,7 @@ import Selector from './selectorFactory';
   
   2018.8.7:将connect接收的props传递给内部组件
   2018.8.8：处理connect组件含有子组件的情况
-  2018.8.9: 处理renderCountProp
+  2018.8.9: 处理renderCountProp/shouldHandleStateChanges
 */
 
 
@@ -26,6 +26,7 @@ function connect(
   {
     withRef = false, // 如果这个参数为true，那么被包裹的组件会通过getWrappedInstance()方法被暴露出来。
     renderCountProp = undefined, //如果传入这个参数，那么重复渲染次数就会以同名属性传入被包裹组件的props中
+    shouldHandleStateChanges = false, //如果传入这个参数，那么state的变化将不会反应到视图上
     ...extraOptions
   }
 ) {
@@ -48,6 +49,7 @@ function connect(
       }
 
       componentDidMount() {
+        if(shouldHandleStateChanges){return}
         if (Boolean(mapStateToProps)) {
           this.subscription.trySubscribe()
         }
