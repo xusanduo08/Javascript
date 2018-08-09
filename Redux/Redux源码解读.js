@@ -1,5 +1,5 @@
 
-//state的改变、props的改变都会引起组件的重新渲染。（shouldComponentUpdat=true）
+//state的改变、props的改变都会引起组件的重新渲染流程，至于最后是否真的渲染还要看shouldComponentUpdat方法的返回值。
 
 /*
 Redux:  createStore：创建并返回一个store
