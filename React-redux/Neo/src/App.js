@@ -27,6 +27,7 @@ export default  connect(
     undefined,
     {
         withRef:true,
-        renderCountProp: "renderCounts" //组件props中将含有renderCounts属性，其值为组件的重复渲染次数
+        renderCountProp: "renderCounts", //组件props中将含有renderCounts属性，其值为组件的重复渲染次数
+        storeKey:"store"
     }
 )(App);
