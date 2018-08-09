@@ -27,6 +27,7 @@ function connect(
     withRef = false, // 如果这个参数为true，那么被包裹的组件会通过getWrappedInstance()方法被暴露出来。
     renderCountProp = undefined, //如果传入这个参数，那么重复渲染次数就会以同名属性传入被包裹组件的props中
     shouldHandleStateChanges = false, //如果传入这个参数，那么state的变化将不会反应到视图上
+    storeKey = 'store', // 上下文对象中store对应的key值
     ...extraOptions
   }
 ) {
@@ -38,7 +39,8 @@ function connect(
     class Connect extends Component {
       constructor(props, context) {
         super(props, context);
-        this.store = this.context.store; //从上下文中获取store，由Provider将store放到上下文中
+        console.log(context)
+        this.store = this.context[storeKey]; //从上下文中获取store，由Provider将store放到上下文中
         this.subscription = new Subscription(this.store, this.onStateChange.bind(this)); // 抽取订阅动作到订阅实例中，便于管理
         this.selector = new Selector(initMapStateToProps, initMapDispatchToProps, this.store)    //selector用来计算状态
         this.setWrappedInstance = this.setWrappedInstance.bind(this);
@@ -49,7 +51,7 @@ function connect(
       }
 
       componentDidMount() {
-        if(shouldHandleStateChanges){return}
+        if (shouldHandleStateChanges) { return }
         if (Boolean(mapStateToProps)) {
           this.subscription.trySubscribe()
         }
@@ -77,24 +79,24 @@ function connect(
         this.subscription = null;
       }
 
-      getWrappedInstance(){ //获取被包裹组件实例的引用
+      getWrappedInstance() { //获取被包裹组件实例的引用
         return this.wrappedInstance;
       }
-      
-      setWrappedInstance(ref){
+
+      setWrappedInstance(ref) {
         this.wrappedInstance = ref;
       }
 
       addExtraProps(props) {  // 将传递到connect组件上的props也传给connect内部的组件
-        if(!withRef){
+        if (!withRef) {
           return props;
         }
-        const withExtras = {...props};
-        if(withRef){   // 是否将被包裹组件的实例暴露出来
+        const withExtras = { ...props };
+        if (withRef) {   // 是否将被包裹组件的实例暴露出来
           withExtras.ref = this.setWrappedInstance;
         }
-        if(renderCountProp) {
-            withExtras[renderCountProp] = this.renderCount++;
+        if (renderCountProp) {
+          withExtras[renderCountProp] = this.renderCount++;
         }
         return withExtras;
       }
@@ -106,7 +108,7 @@ function connect(
     }
 
     Connect.contextTypes = {
-      store: PropTypes.object
+      [storeKey]: PropTypes.object
     }
     return Connect;
   }
