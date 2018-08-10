@@ -31,7 +31,7 @@ function connect(
     shouldHandleStateChanges = false, //如果传入这个参数，那么state的变化将不会反应到视图上
     storeKey = 'store', // 上下文对象中store对应的key值
     ...extraOptions
-  }
+  } = {}
 ) {
 
   const initMapDispatchToProps = dealMapDispatchToProps(mapDispatchToProps);
