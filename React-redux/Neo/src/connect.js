@@ -16,6 +16,8 @@ import Selector from './selectorFactory';
   2018.8.7:将connect接收的props传递给内部组件
   2018.8.8：处理connect组件含有子组件的情况
   2018.8.9: 处理renderCountProp/shouldHandleStateChanges
+  2018.8.10： 控制组件的shouldComponentUpdate
+    
 */
 
 
@@ -39,7 +41,6 @@ function connect(
     class Connect extends Component {
       constructor(props, context) {
         super(props, context);
-        console.log(context)
         this.store = this.context[storeKey]; //从上下文中获取store，由Provider将store放到上下文中
         this.subscription = new Subscription(this.store, this.onStateChange.bind(this)); // 抽取订阅动作到订阅实例中，便于管理
         this.selector = new Selector(initMapStateToProps, initMapDispatchToProps, this.store)    //selector用来计算状态
@@ -48,6 +49,14 @@ function connect(
         if (Boolean(mapStateToProps)) {
           this.init();  // 如果mapStateToProps没有传递的话，则connect组件不会去订阅store的变化。
         }
+      }
+
+      componentWillReceiveProps(nextProps){
+        this.selector.run(nextProps);
+      }
+
+      shouldComponentUpdate(){
+        return this.selector.shouldUpdate;
       }
 
       componentDidMount() {
@@ -95,7 +104,7 @@ function connect(
         if (withRef) {   // 是否将被包裹组件的实例暴露出来
           withExtras.ref = this.setWrappedInstance;
         }
-        if (renderCountProp) {
+        if (renderCountProp) {  //是否将重复渲染次数传入props中
           withExtras[renderCountProp] = this.renderCount++;
         }
         return withExtras;
