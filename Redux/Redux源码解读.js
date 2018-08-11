@@ -111,6 +111,16 @@ class Connect extends Component {  //实际最终返回的是connect组件
         //理解下来，应该只有最顶级的父元素是直接订阅store的，其它子组件都是通过嵌套，把各自的订阅函数放到了对应父级的listeners队列里，通过一层层
         //的嵌套，最终到了最顶级的父组件的listeners队列里
         //针对Provider下第一级子组件，由于parentSub为null，所以在订阅store的时候会直接通过this.store.subscribe()订阅
+
+        // componentWillMount fires during server side rendering, but componentDidMount and
+        // componentWillUnmount do not. Because of this, trySubscribe happens during ...didMount.
+        // Otherwise, unsubscription would never take place during SSR, causing a memory leak.
+        // To handle the case where a child component may have triggered a state change by
+        // dispatching an action in its componentWillMount, we have to re-run the select and maybe
+        // re-render.
+        this.subscription.trySubscribe()
+        this.selector.run(this.props)   //如果组件在componentWillMount阶段调用dispatch发布action更改state，就需要重新计算state并重新渲染
+        if (this.selector.shouldComponentUpdate) this.forceUpdate()
     }
 
     componentWillReceiveProps(nextProps) {

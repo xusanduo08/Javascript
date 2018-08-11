@@ -51,11 +51,11 @@ function connect(
         }
       }
 
-      componentWillReceiveProps(nextProps){
+      componentWillReceiveProps(nextProps) {
         this.selector.run(nextProps);
       }
 
-      shouldComponentUpdate(){
+      shouldComponentUpdate() {
         return this.selector.shouldUpdate;
       }
 
@@ -64,7 +64,10 @@ function connect(
         if (Boolean(mapStateToProps)) {
           this.subscription.trySubscribe()
         }
-        this.selector.run(this.props);
+        this.selector.run(this.props);  // 考虑到如果组件在componentWillMount阶段调用dispatch发布action更改state，那么就需要重新计算状态和渲染
+        if (this.selector.shouldUpdate) {
+          this.forceUpdate();
+        }
       }
 
       init() {
