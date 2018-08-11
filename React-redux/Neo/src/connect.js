@@ -96,7 +96,7 @@ function connect(
         this.wrappedInstance = ref;
       }
 
-      addExtraProps(props) {  // 将传递到connect组件上的props也传给connect内部的组件
+      addExtraProps(props) {  // 将传递到connect组件上的props也传给connect内部的组件,注意，根据state计算出来的属性会覆盖通过props传进来的属性
         if (!withRef) {
           return props;
         }

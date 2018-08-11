@@ -9,7 +9,7 @@ export default class Selector {
   }
 
   run(props) {
-    const nextProps = { ...this.initMapDispatchToProps(this.store.dispatch), ...this.initMapStateToProps(this.store.getState()), ...props };
+    const nextProps = {...props, ...this.initMapDispatchToProps(this.store.dispatch), ...this.initMapStateToProps(this.store.getState()) };
     if (nextProps !== this.props) {
       this.shouldUpdate = true;
       this.props = nextProps;

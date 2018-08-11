@@ -88,4 +88,33 @@ describe('connect', () => {
     const container = testRenderer.root.findByType(Container)
     expect(container.instance.context.store).toBe(store)
   })
+
+  it('should pass state and props to the given component', () => {
+    const store = createStore(() => ({
+      foo: 'bar',
+      baz: 42,
+      hello: 'world'
+    }))
+
+    @connect(({ foo, baz }) => ({ foo, baz }))
+    class Container extends Component {
+      render() {
+        return <Passthrough {...this.props} />
+      }
+    }
+
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <Container pass="through" baz={50} />
+      </ProviderMock>
+    )
+    const stub = testRenderer.root.findByType(Passthrough)
+    expect(stub.props.pass).toEqual('through')
+    expect(stub.props.foo).toEqual('bar')
+    expect(stub.props.baz).toEqual(42)
+    expect(stub.props.hello).toEqual(undefined)
+    expect(() =>
+      testRenderer.root.findByType(Container)
+    ).not.toThrow()
+  })
 })
