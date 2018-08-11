@@ -117,4 +117,271 @@ describe('connect', () => {
       testRenderer.root.findByType(Container)
     ).not.toThrow()
   })
+
+  it('should subscribe class components to the store changes', () => {
+    const store = createStore(stringBuilder)
+
+    @connect(state => ({ string: state }) )
+    class Container extends Component {
+      render() {
+        return <Passthrough {...this.props}/>
+      }
+    }
+
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <Container />
+      </ProviderMock>
+    )
+
+    const stub = testRenderer.root.findByType(Passthrough)
+    expect(stub.props.string).toBe('')
+    store.dispatch({ type: 'APPEND', body: 'a' })
+    expect(stub.props.string).toBe('a')
+    store.dispatch({ type: 'APPEND', body: 'b' })
+    expect(stub.props.string).toBe('ab')
+  })
+
+  it('should subscribe pure function components to the store changes', () => {
+    const store = createStore(stringBuilder)
+
+    let Container = connect(
+      state => ({ string: state })
+    )(function Container(props) {
+      return <Passthrough {...props}/>
+    })
+
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <Container />
+      </ProviderMock>
+    )
+    spy.mockRestore()
+    expect(spy).toHaveBeenCalledTimes(0)
+
+    const stub = testRenderer.root.findByType(Passthrough)
+    expect(stub.props.string).toBe('')
+    store.dispatch({ type: 'APPEND', body: 'a' })
+    expect(stub.props.string).toBe('a')
+    store.dispatch({ type: 'APPEND', body: 'b' })
+    expect(stub.props.string).toBe('ab')
+  })
+
+  it('should retain the store\'s context', () => {
+    const store = new ContextBoundStore(stringBuilder)
+
+    let Container = connect(
+      state => ({ string: state })
+    )(function Container(props) {
+      return <Passthrough {...props}/>
+    })
+
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <Container />
+      </ProviderMock>
+    )
+    spy.mockRestore()
+    expect(spy).toHaveBeenCalledTimes(0)
+
+    const stub = testRenderer.root.findByType(Passthrough)
+    expect(stub.props.string).toBe('')
+    store.dispatch({ type: 'APPEND', body: 'a' })
+    expect(stub.props.string).toBe('a')
+  })
+
+  it('should handle dispatches before componentDidMount', () => {
+    const store = createStore(stringBuilder)
+
+    @connect(state => ({ string: state }) )
+    class Container extends Component {
+      componentWillMount() {
+        store.dispatch({ type: 'APPEND', body: 'a' })
+      }
+
+      render() {
+        return <Passthrough {...this.props}/>
+      }
+    }
+
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <Container />
+      </ProviderMock>
+    )
+
+    const stub = testRenderer.root.findByType(Passthrough)
+    expect(stub.props.string).toBe('a')
+  })
+
+  it('should handle additional prop changes in addition to slice', () => {
+    const store = createStore(() => ({
+      foo: 'bar'
+    }))
+
+    @connect(state => state)
+    class ConnectContainer extends Component {
+      render() {
+        return (
+          <Passthrough {...this.props} pass={this.props.bar.baz} />
+        )
+      }
+    }
+
+    class Container extends Component {
+      constructor() {
+        super()
+        this.state = {
+          bar: {
+            baz: ''
+          }
+        }
+      }
+
+      componentDidMount() {
+        this.setState({
+          bar: Object.assign({}, this.state.bar, { baz: 'through' })
+        })
+      }
+
+      render() {
+        return (
+          <ProviderMock store={store}>
+            <ConnectContainer bar={this.state.bar} />
+           </ProviderMock>
+        )
+      }
+    }
+
+    const testRenderer = TestRenderer.create(<Container />)
+    const stub = testRenderer.root.findByType(Passthrough)
+    expect(stub.props.foo).toEqual('bar')
+    expect(stub.props.pass).toEqual('through')
+  })
+
+  it('should handle unexpected prop changes with forceUpdate()', () => {
+    const store = createStore(() => ({}))
+
+    @connect(state => state)
+    class ConnectContainer extends Component {
+      render() {
+        return (
+          <Passthrough {...this.props} pass={this.props.bar} />
+        )
+      }
+    }
+
+    class Container extends Component {
+      constructor() {
+        super()
+        this.bar = 'baz'
+      }
+
+      componentDidMount() {
+        this.bar = 'foo'
+        this.forceUpdate()
+        this.c.forceUpdate()
+      }
+
+      render() {
+        return (
+          <ProviderMock store={store}>
+            <ConnectContainer bar={this.bar} ref={c => this.c = c} />
+          </ProviderMock>
+        )
+      }
+    }
+
+    const testRenderer = TestRenderer.create(<Container />)
+    const stub = testRenderer.root.findByType(Passthrough)
+    expect(stub.props.bar).toEqual('foo')
+  })
+
+  it('should remove undefined props', () => {
+    const store = createStore(() => ({}))
+    let props = { x: true }
+    let container
+
+    @connect(() => ({}), () => ({}))
+    class ConnectContainer extends Component {
+      render() {
+        return (
+          <Passthrough {...this.props} />
+        )
+      }
+    }
+
+    class HolderContainer extends Component {
+      render() {
+        return (
+          <ConnectContainer {...props} />
+        )
+      }
+    }
+
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <HolderContainer ref={instance => container = instance} />
+      </ProviderMock>
+    )
+
+    const propsBefore = {
+      ...testRenderer.root.findByType(Passthrough).props
+    }
+
+    props = {}
+    container.forceUpdate()
+
+    const propsAfter = {
+      ...testRenderer.root.findByType(Passthrough).props
+    }
+
+    expect(propsBefore.x).toEqual(true)
+    expect('x' in propsAfter).toEqual(false, 'x prop must be removed')
+  })
+
+  it('should remove undefined props without mapDispatch', () => {
+    const store = createStore(() => ({}))
+    let props = { x: true }
+    let container
+
+    @connect(() => ({}))
+    class ConnectContainer extends Component {
+      render() {
+        return (
+          <Passthrough {...this.props} />
+        )
+      }
+    }
+
+    class HolderContainer extends Component {
+      render() {
+        return (
+          <ConnectContainer {...props} />
+        )
+      }
+    }
+
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <HolderContainer ref={instance => container = instance} />
+      </ProviderMock>
+    )
+
+    const propsBefore = {
+      ...testRenderer.root.findByType(Passthrough).props
+    }
+
+    props = {}
+    container.forceUpdate()
+
+    const propsAfter = {
+      ...testRenderer.root.findByType(Passthrough).props
+    }
+
+    expect(propsBefore.x).toEqual(true)
+    expect('x' in propsAfter).toEqual(false, 'x prop must be removed')
+  })
 })
