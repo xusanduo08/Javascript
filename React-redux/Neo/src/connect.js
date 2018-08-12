@@ -4,6 +4,7 @@ import dealMapDispatchToProps from './dealMapDispatchToProps.js'
 import dealMapStateToProps from './dealMapStateToProps.js';
 import Subscription from './Subscription';
 import Selector from './selectorFactory';
+import dealMergeProps from './dealMergeProps';
 /*
   react-redux的主要功能就是让react的组件与redux的store关联起来，也就是订阅到store上。
   这份工作靠的主要就是connect方法。
@@ -24,7 +25,7 @@ import Selector from './selectorFactory';
 function connect(
   mapStateToProps,
   mapDispatchToProps,
-  mergeProps,
+  mergeProps, //自定义的合并属性的方法，入参为stateProps, dispatchProps, ownProps
   {
     withRef = false, // 如果这个参数为true，那么被包裹的组件会通过getWrappedInstance()方法被暴露出来。
     renderCountProp = undefined, //如果传入这个参数，那么重复渲染次数就会以同名属性传入被包裹组件的props中
@@ -36,6 +37,7 @@ function connect(
 
   const initMapDispatchToProps = dealMapDispatchToProps(mapDispatchToProps);
   const initMapStateToProps = dealMapStateToProps(mapStateToProps);
+  const initMergeProps = dealMergeProps(mergeProps);
   return function (component) {
 
     class Connect extends Component {
@@ -43,7 +45,7 @@ function connect(
         super(props, context);
         this.store = this.context[storeKey]; //从上下文中获取store，由Provider将store放到上下文中
         this.subscription = new Subscription(this.store, this.onStateChange.bind(this)); // 抽取订阅动作到订阅实例中，便于管理
-        this.selector = new Selector(initMapStateToProps, initMapDispatchToProps, this.store)    //selector用来计算状态
+        this.selector = new Selector(initMapStateToProps, initMapDispatchToProps, initMergeProps, this.store)    //selector用来计算状态
         this.setWrappedInstance = this.setWrappedInstance.bind(this);
         this.renderCount = 0;   // 渲染次数
         if (Boolean(mapStateToProps)) {
