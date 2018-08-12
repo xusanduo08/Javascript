@@ -121,10 +121,10 @@ describe('connect', () => {
   it('should subscribe class components to the store changes', () => {
     const store = createStore(stringBuilder)
 
-    @connect(state => ({ string: state }) )
+    @connect(state => ({ string: state }))
     class Container extends Component {
       render() {
-        return <Passthrough {...this.props}/>
+        return <Passthrough {...this.props} />
       }
     }
 
@@ -148,10 +148,10 @@ describe('connect', () => {
     let Container = connect(
       state => ({ string: state })
     )(function Container(props) {
-      return <Passthrough {...props}/>
+      return <Passthrough {...props} />
     })
 
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => { })
     const testRenderer = TestRenderer.create(
       <ProviderMock store={store}>
         <Container />
@@ -174,10 +174,10 @@ describe('connect', () => {
     let Container = connect(
       state => ({ string: state })
     )(function Container(props) {
-      return <Passthrough {...props}/>
+      return <Passthrough {...props} />
     })
 
-    const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => { })
     const testRenderer = TestRenderer.create(
       <ProviderMock store={store}>
         <Container />
@@ -195,14 +195,14 @@ describe('connect', () => {
   it('should handle dispatches before componentDidMount', () => {
     const store = createStore(stringBuilder)
 
-    @connect(state => ({ string: state }) )
+    @connect(state => ({ string: state }))
     class Container extends Component {
       componentWillMount() {
         store.dispatch({ type: 'APPEND', body: 'a' })
       }
 
       render() {
-        return <Passthrough {...this.props}/>
+        return <Passthrough {...this.props} />
       }
     }
 
@@ -250,7 +250,7 @@ describe('connect', () => {
         return (
           <ProviderMock store={store}>
             <ConnectContainer bar={this.state.bar} />
-           </ProviderMock>
+          </ProviderMock>
         )
       }
     }
@@ -383,5 +383,142 @@ describe('connect', () => {
 
     expect(propsBefore.x).toEqual(true)
     expect('x' in propsAfter).toEqual(false, 'x prop must be removed')
+  })
+
+  it('should ignore deep mutations in props', () => {
+    const store = createStore(() => ({
+      foo: 'bar'
+    }))
+
+    @connect(state => state)
+    class ConnectContainer extends Component {
+      render() {
+        return (
+          <Passthrough {...this.props} pass={this.props.bar.baz} />
+        )
+      }
+    }
+
+    class Container extends Component {
+      constructor() {
+        super()
+        this.state = {
+          bar: {
+            baz: ''
+          }
+        }
+      }
+
+      componentDidMount() {
+        // Simulate deep object mutation
+        const bar = this.state.bar
+        bar.baz = 'through'
+        this.setState({
+          bar
+        })
+      }
+
+      render() {
+        return (
+          <ProviderMock store={store}>
+            <ConnectContainer bar={this.state.bar} />
+          </ProviderMock>
+        )
+      }
+    }
+
+    const testRenderer = TestRenderer.create(<Container />)
+    const stub = testRenderer.root.findByType(Passthrough)
+    expect(stub.props.foo).toEqual('bar')
+    expect(stub.props.pass).toEqual('')
+  })
+
+  it('should allow for merge to incorporate state and prop changes', () => {
+    const store = createStore(stringBuilder)
+
+    function doSomething(thing) {
+      return {
+        type: 'APPEND',
+        body: thing
+      }
+    }
+
+    @connect(
+      state => ({ stateThing: state }),
+      dispatch => ({
+        doSomething: (whatever) => dispatch(doSomething(whatever))
+      }),
+      (stateProps, actionProps, parentProps) => ({
+        ...stateProps,
+        ...actionProps,
+        mergedDoSomething(thing) {
+          const seed = stateProps.stateThing === '' ? 'HELLO ' : ''
+          actionProps.doSomething(seed + thing + parentProps.extra)
+        }
+      })
+    )
+    class Container extends Component {
+      render() {
+        return <Passthrough {...this.props} />
+      }
+    }
+
+    class OuterContainer extends Component {
+      constructor() {
+        super()
+        this.state = { extra: 'z' }
+      }
+
+      render() {
+        return (
+          <ProviderMock store={store}>
+            <Container extra={this.state.extra} />
+          </ProviderMock>
+        )
+      }
+    }
+
+    const testRenderer = TestRenderer.create(<OuterContainer />)
+    const stub = testRenderer.root.findByType(Passthrough)
+    expect(stub.props.stateThing).toBe('')
+    stub.props.mergedDoSomething('a')
+    expect(stub.props.stateThing).toBe('HELLO az')
+    stub.props.mergedDoSomething('b')
+    expect(stub.props.stateThing).toBe('HELLO azbz')
+    testRenderer.root.instance.setState({ extra: 'Z' })
+    stub.props.mergedDoSomething('c')
+    expect(stub.props.stateThing).toBe('HELLO azbzcZ')
+  })
+
+  it('should merge actionProps into WrappedComponent', () => {
+    const store = createStore(() => ({
+      foo: 'bar'
+    }))
+
+    @connect(
+      state => state,
+      dispatch => ({ dispatch })
+    )
+    class Container extends Component {
+      render() {
+        return <Passthrough {...this.props} />
+      }
+    }
+
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <Container pass="through" />
+      </ProviderMock>
+    )
+    const stub = testRenderer.root.findByType(Passthrough)
+    expect(stub.props.dispatch).toEqual(store.dispatch)
+    expect(stub.props.foo).toEqual('bar')
+    expect(() =>
+      testRenderer.root.findByType(Container)
+    ).not.toThrow()
+    const decorated = testRenderer.root.findByType(Container)
+    console.log(decorated.instance.isSubscribed)
+    expect(decorated.instance.isSubscribed()).toBe(true)
+    
   })
 })
