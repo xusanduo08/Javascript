@@ -8,6 +8,10 @@ export default class Subscription {
     this.onStateChange = onStateChange;
   }
 
+  isSubscribed(){
+    return Boolean(this.unsubscribe);
+  }
+
   //订阅
   trySubscribe() {
     if (!this.unsubscribe) {
@@ -19,6 +23,7 @@ export default class Subscription {
   tryUnsubscribe() {
     if (this.unsubscribe) {
       this.unsubscribe(); // 取消订阅
+      this.unsubscribe = null;
     }
   }
 

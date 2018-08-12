@@ -97,6 +97,10 @@ function connect(
         return this.wrappedInstance;
       }
 
+      isSubscribed(){
+        return Boolean(this.subscription) && this.subscription.isSubscribed()
+      }
+
       setWrappedInstance(ref) {
         this.wrappedInstance = ref;
       }
