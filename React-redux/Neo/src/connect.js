@@ -114,6 +114,7 @@ function connect(
       }
 
       render() {
+        this.selector.shouldUpdate = false;
         return createElement(component, this.addExtraProps(this.selector.props));
       }
 
