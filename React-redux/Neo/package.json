@@ -24,6 +24,7 @@
     "babel-preset-react": "^6.24.1",
     "babel-preset-stage-0": "^6.24.1",
     "create-react-class": "^15.6.3",
+    "eslint": "^5.3.0",
     "jest": "^23.5.0",
     "react-test-render": "^1.1.1",
     "react-test-renderer": "^16.4.2"
