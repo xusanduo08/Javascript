@@ -517,8 +517,55 @@ describe('connect', () => {
       testRenderer.root.findByType(Container)
     ).not.toThrow()
     const decorated = testRenderer.root.findByType(Container)
-    console.log(decorated.instance.isSubscribed)
     expect(decorated.instance.isSubscribed()).toBe(true)
-    
+
+  })
+
+  it('should not invoke mapState when props change if it only has one argument', () => {
+    const store = createStore(stringBuilder)
+
+    let invocationCount = 0
+
+    /*eslint-disable no-unused-vars */
+    @connect((arg1) => {
+      invocationCount++
+      return {}
+      })
+    /*eslint-enable no-unused-vars */
+    class WithoutProps extends Component {
+      render() {
+        return <Passthrough {...this.props} />
+      }
+    }
+
+    class OuterComponent extends Component {
+      constructor() {
+        super()
+        this.state = { foo: 'FOO' }
+      }
+
+      setFoo(foo) {
+        this.setState({ foo })
+      }
+
+      render() {
+        return (
+          <div>
+            <WithoutProps {...this.state} />
+          </div>
+        )
+      }
+    }
+
+    let outerComponent
+    TestRenderer.create(
+      <ProviderMock store={store}>
+        <OuterComponent ref={c => outerComponent = c} />
+      </ProviderMock>
+    )
+    outerComponent.setFoo('BAR')
+    outerComponent.setFoo('DID')
+
+    expect(invocationCount).toEqual(1)
   })
 })
