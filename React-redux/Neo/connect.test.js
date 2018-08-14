@@ -568,4 +568,138 @@ describe('connect', () => {
 
     expect(invocationCount).toEqual(1)
   })
+
+  it('should invoke mapDispatch every time props are changed if it has zero arguments', () => {
+    const store = createStore(stringBuilder)
+
+    let invocationCount = 0
+
+    @connect(null, () => {
+      invocationCount++
+      return {}
+    })
+
+    class WithoutProps extends Component {
+      render() {
+        return <Passthrough {...this.props}/>
+      }
+    }
+
+    class OuterComponent extends Component {
+      constructor() {
+        super()
+        this.state = { foo: 'FOO' }
+      }
+
+      setFoo(foo) {
+        this.setState({ foo })
+      }
+
+      render() {
+        return (
+          <div>
+            <WithoutProps {...this.state} />
+          </div>
+        )
+      }
+    }
+
+    let outerComponent
+    TestRenderer.create(
+      <ProviderMock store={store}>
+        <OuterComponent ref={c => outerComponent = c} />
+      </ProviderMock>
+    )
+
+    outerComponent.setFoo('BAR')
+    outerComponent.setFoo('DID')
+
+    expect(invocationCount).toEqual(3)
+  })
+
+  it('should invoke mapDispatch every time props are changed if it has a second argument', () => {
+    const store = createStore(stringBuilder)
+
+    let propsPassedIn
+    let invocationCount = 0
+
+    @connect(null, (dispatch, props) => {
+      invocationCount++
+      propsPassedIn = props
+      return {}
+    })
+    class WithProps extends Component {
+      render() {
+        return <Passthrough {...this.props}/>
+      }
+    }
+
+    class OuterComponent extends Component {
+      constructor() {
+        super()
+        this.state = { foo: 'FOO' }
+      }
+
+      setFoo(foo) {
+        this.setState({ foo })
+      }
+
+      render() {
+        return (
+          <div>
+            <WithProps {...this.state} />
+          </div>
+        )
+      }
+    }
+
+    let outerComponent
+    TestRenderer.create(
+      <ProviderMock store={store}>
+        <OuterComponent ref={c => outerComponent = c} />
+      </ProviderMock>
+    )
+
+    outerComponent.setFoo('BAR')
+    outerComponent.setFoo('BAZ')
+
+    expect(invocationCount).toEqual(3)
+    expect(propsPassedIn).toEqual({
+      foo: 'BAZ'
+    })
+  })
+
+  it('should pass dispatch and avoid subscription if arguments are falsy', () => {
+    const store = createStore(() => ({
+      foo: 'bar'
+    }))
+
+    function runCheck(...connectArgs) {
+      @connect(...connectArgs)
+      class Container extends Component {
+        render() {
+          return <Passthrough {...this.props} />
+        }
+      }
+
+      const testRenderer = TestRenderer.create(
+        <ProviderMock store={store}>
+          <Container pass="through" />
+        </ProviderMock>
+      )
+      const stub = testRenderer.root.findByType(Passthrough)
+      expect(stub.props.dispatch).toEqual(store.dispatch)
+      expect(stub.props.foo).toBe(undefined)
+      expect(stub.props.pass).toEqual('through')
+      expect(() =>
+        testRenderer.root.findByType(Container)
+      ).not.toThrow()
+      const decorated = testRenderer.root.findByType(Container)
+      expect(decorated.instance.isSubscribed()).toBe(false)
+    }
+
+    runCheck()
+    runCheck(null, null, null)
+    runCheck(false, false, false)
+  })
 })
