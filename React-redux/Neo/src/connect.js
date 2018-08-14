@@ -48,9 +48,9 @@ function connect(
         this.selector = new Selector(initMapStateToProps, initMapDispatchToProps, initMergeProps, this.store)    //selector用来计算状态
         this.setWrappedInstance = this.setWrappedInstance.bind(this);
         this.renderCount = 0;   // 渲染次数
-        if (Boolean(mapStateToProps)) {
-          this.init();  // 如果mapStateToProps没有传递的话，则connect组件不会去订阅store的变化。
-        }
+        
+        this.init();
+        
       }
 
       componentWillReceiveProps(nextProps) {
@@ -63,7 +63,7 @@ function connect(
 
       componentDidMount() {
         if (shouldHandleStateChanges) { return }
-        if (Boolean(mapStateToProps)) {
+        if (Boolean(mapStateToProps)) { // 如果mapStateToProps没有传递的话，则connect组件不会去订阅store的变化。
           this.subscription.trySubscribe()
         }
         this.selector.run(this.props);  // 考虑到如果组件在componentWillMount阶段调用dispatch发布action更改state，那么就需要重新计算状态和渲染

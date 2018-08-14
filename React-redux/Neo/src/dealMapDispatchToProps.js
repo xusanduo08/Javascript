@@ -1,11 +1,11 @@
 
 //处理mapDispatchToProps
-function dealMapDispatchToProps(mapDispatchToProps, dispatch) {
+function dealMapDispatchToProps(mapDispatchToProps) {
 
   //如果没有传入mapDispatchToProps参数，那么要确保dispatch方法作为props传入到组件中
   if (!mapDispatchToProps) {
-    return function constantSelector(dispatch, options) {
-      return ()=> ({ dispatch })
+    return function constantSelector() {
+      return (dispatch)=> ({ dispatch })
     }
   }
 
