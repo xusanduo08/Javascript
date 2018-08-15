@@ -702,4 +702,76 @@ describe('connect', () => {
     runCheck(null, null, null)
     runCheck(false, false, false)
   })
+
+  it('should unsubscribe before unmounting', () => {
+    const store = createStore(stringBuilder)
+    const subscribe = store.subscribe
+
+    // Keep track of unsubscribe by wrapping subscribe()
+    const spy = jest.fn(() => ({}))
+    store.subscribe = (listener) => {
+      const unsubscribe = subscribe(listener)
+      return () => {
+        spy()
+        return unsubscribe()
+      }
+    }
+
+    @connect(
+      state => ({ string: state }),
+      dispatch => ({ dispatch })
+    )
+    class Container extends Component {
+      render() {
+        return <Passthrough {...this.props} />
+      }
+    }
+
+    const div = document.createElement('div')
+    ReactDOM.render(
+      <ProviderMock store={store}>
+        <Container />
+      </ProviderMock>,
+      div
+    )
+
+    expect(spy).toHaveBeenCalledTimes(0)
+    ReactDOM.unmountComponentAtNode(div)
+    expect(spy).toHaveBeenCalledTimes(1)
+  })
+  
+  it('should not attempt to set state after unmounting', () => {
+    const store = createStore(stringBuilder)
+    let mapStateToPropsCalls = 0
+
+    @connect(
+      () => ({ calls: ++mapStateToPropsCalls }),
+      dispatch => ({ dispatch })
+    )
+    class Container extends Component {
+      render() {
+        return <Passthrough {...this.props} />
+      }
+    }
+
+    const div = document.createElement('div')
+    store.subscribe(() =>
+      ReactDOM.unmountComponentAtNode(div)
+    )
+    ReactDOM.render(
+      <ProviderMock store={store}>
+        <Container />
+      </ProviderMock>,
+      div
+    )
+
+    expect(mapStateToPropsCalls).toBe(1)
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    store.dispatch({ type: 'APPEND', body: 'a' })
+    spy.mockRestore()
+    expect(spy).toHaveBeenCalledTimes(0)
+    expect(mapStateToPropsCalls).toBe(1)
+  })
+
+  
 })
