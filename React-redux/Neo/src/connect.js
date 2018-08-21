@@ -18,7 +18,7 @@ import dealMergeProps from './dealMergeProps';
   2018.8.8：处理connect组件含有子组件的情况
   2018.8.9: 处理renderCountProp/shouldHandleStateChanges
   2018.8.10： 控制组件的shouldComponentUpdate
-    
+  2018.8.21: 对于<Connect1><Connect2></Connect2></Connect1>这种情况需要额外处理，主要是订阅store时有些变化，组件会将自己的订阅实例暴露在上下文中。
 */
 
 
@@ -44,13 +44,20 @@ function connect(
       constructor(props, context) {
         super(props, context);
         this.store = this.context[storeKey]; //从上下文中获取store，由Provider将store放到上下文中
-        this.subscription = new Subscription(this.store, this.onStateChange.bind(this)); // 抽取订阅动作到订阅实例中，便于管理
-        this.selector = new Selector(initMapStateToProps, initMapDispatchToProps, initMergeProps, this.store)    //selector用来计算状态
+        
+        
         this.setWrappedInstance = this.setWrappedInstance.bind(this);
         this.renderCount = 0;   // 渲染次数
-        
-        this.init();
-        
+        this.propsMode = Boolean(props[storeKey]);//属性模式，true 组件从props中获取store，false组件从上下文中获取store
+        this.initSelector();
+        this.initSubscription();
+      }
+
+      getChildContext() {
+        const subscription = this.propsMode ? null : this.subscription;//如果组件是从prosp获取store的，则其订阅实例对从上下文获取store的组件是透明的
+        return {
+          subscription : subscription || this.context.subscription //返回自身或者上层组件的订阅实例
+        }
       }
 
       componentWillReceiveProps(nextProps) {
@@ -72,15 +79,32 @@ function connect(
         }
       }
 
-      init() {
+      initSelector() {
+        this.selector = new Selector(initMapStateToProps, initMapDispatchToProps, initMergeProps, this.store)    //selector用来计算状态
         //从store中拿到state，并用mapStateToProsp、mapDispatchToProps计算出要传入component的props
         this.selector.run(this.props);
+      }
+
+      initSubscription(){
+        const parentSub = (this.propsMode ? this.props : this.context)['subscription'];//根据propsMode从props或者上下文中获取订阅实例
+        this.subscription = new Subscription(this.store, parentSub, this.onStateChange.bind(this)); // 抽取订阅动作到订阅实例中，便于管理
+        this.notifyNestedSubs = this.subscription.notifyNestedSubs.bind(this.subscription); // 通知子组件的功能
       }
 
       onStateChange() {
         //state如果发生变化，就要重新计算props值，并让组件re-render。
         this.selector.run(this.props);
-        this.setState({});  // 仅为触发组件re-render过程。
+        if(!this.selector.shouldUpdate){
+          this.notifyNestedSubs();
+        } else {
+          this.componentDidUpdate = this.notifyNestedSubsOnComponentDidUpdate;
+          this.setState({});  // 仅为触发组件re-render过程。
+        }
+      }
+
+      notifyNestedSubsOnComponentDidUpdate(){
+        this.componentDidUpdate = undefined;  //置undefined，避免非store改变引起的更新通知子组件
+        this.notifyNestedSubs();
       }
 
       //组件卸载时要释放掉空间
@@ -118,6 +142,9 @@ function connect(
         if (renderCountProp) {  //是否将重复渲染次数传入props中
           withExtras[renderCountProp] = this.renderCount++;
         }
+        if(this.propsMode && this.subscription) {
+          withExtras.subscription = this.subscription;
+        }
         return withExtras;
       }
 
@@ -130,6 +157,10 @@ function connect(
 
     Connect.contextTypes = {
       [storeKey]: PropTypes.object
+    }
+
+    Connect.childContextTypes = {
+      subscription: PropTypes.object
     }
     return Connect;
   }
