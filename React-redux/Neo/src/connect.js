@@ -117,6 +117,7 @@ function connect(
         this.selector.run = function(){}; // 主要考虑到dispatch一个action的同时组件正准备卸载，此时组件的onStateChange可能已经处于触发状态，为了避免不必要的计算，需要去把selector.run置成空函数
         //但是我看代码，订阅函数的执行都是按照订阅顺序来的，如果在第二个订阅函数中卸载第一个订阅函数对应的组件，这个时候第一个组件的订阅函数应该运行完了才对啊，想不通
         this.subscription = null;
+        this.notifyNestedSubs = function(){};
       }
 
       getWrappedInstance() { //获取被包裹组件实例的引用

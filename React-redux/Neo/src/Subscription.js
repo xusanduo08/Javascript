@@ -46,6 +46,7 @@ export default class Subscription {
     this.store = store;
     this.onStateChange = onStateChange;
     this.listener = nullListeners;
+    this.parentSub = parentSub;
   }
 
   addNestedSub(listener){
