@@ -2,6 +2,12 @@
 
 import shallowEqual from './shallowEqual'
 
+//react-readux中对state进行比较时直接用的严格等于‘===’，而对于props的比较则是采用浅比较，我不知道这是为什
+//讲道理，state每次计算是都是从store重新取值的，肯定不会严格等于已经存储的state值，也就是说，只要有dispatch操作，就一定会重新渲染
+function areStatesEqual(a, b){
+  return a === b
+}
+
 export default class Selector {
   constructor(initMapStateToProps, initMapDispatchToProps, initMergeProps, store) {
     this.mapDispatchToProps = initMapDispatchToProps();
@@ -49,10 +55,10 @@ export default class Selector {
 
   handleChanges(nextOwnProps){
     if (!shallowEqual(nextOwnProps, this.ownProps)
-      || !shallowEqual(this.ownState, this.store.getState())) {  //浅比较，不会处理对象的突变
+      || !areStatesEqual(this.ownState, this.store.getState())) {  //浅比较，不会处理对象的突变
       const propsChanged = !shallowEqual(nextOwnProps, this.ownProps);
-      const stateChanged =  !shallowEqual(this.ownState, this.store.getState());
-
+      const stateChanged =  !areStatesEqual(this.ownState, this.store.getState());
+        
       this.shouldUpdate = true;
       if(propsChanged && stateChanged){  
         this.props = this.handleNewPropsAndNewState(nextOwnProps, this.store.getState())
