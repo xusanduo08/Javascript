@@ -30,17 +30,25 @@ export default class Selector {
     if(this.mapDispatchToProps.dependsOnOwnProps){
       this.dispatchProps = this.mapDispatchToProps(this.store.dispatch, nextOwnProps);
     }
-    return this.initMergeProps(this.stateProps, this.dispatchProps, this.ownProps)
+    return this.initMergeProps(this.stateProps, this.dispatchProps, this.ownProps)   
   }
 
   handleNewState(newState){
     this.ownState = newState;
-    this.stateProps = this.mapStateToProps(newState, this.ownProps);
+    const nextStateProps = this.mapStateToProps(newState, this.ownProps);
+    const statePropsChanged = !shallowEqual(nextStateProps, this.stateProps);//这地方比较props变化，用的又是浅比较了
+    
     // 这里dispatchProps其实不用每次都计算，毕竟它的值不会因为state有变化而变化
     // 但是又主要将mapToDispatch运行并将结果传入组件中，此后除非connect的props发生改变了，其他情况不需要再运行mapToDispatch
     // 也就是说，在组件初次渲染时，connect的init方法中的那次selector.run中，mapToDispatch需要运行一次，此后props或state有变化是否要运行视情况而定。
     //this.dispatchProps = this.mapDispatchToProps(this.store.dispatch, this.ownProps);
-    return this.initMergeProps(this.stateProps, this.dispatchProps, this.ownProps)
+    if(statePropsChanged){
+      this.stateProps = nextStateProps
+      return this.initMergeProps(this.stateProps, this.dispatchProps, this.ownProps)  //这地方要注意，是不是state改变了计算出来的props就一定发生改变呢？
+      //这个不一定，计算规则是根据reducer来的，所以state改变，相应的props不一定改变。
+    }
+    
+    return this.props;
   }
 
   handleNewPropsAndNewState(nextOwnProps, nextState){
@@ -66,8 +74,20 @@ export default class Selector {
       if(propsChanged){
         this.props = this.handleNewProps(nextOwnProps);
       }
+
+      //有state改变，并不一定代表计算出来的要传入包裹组件的props也会有变更，那ownProsp改变了，是不是也是同样的处理呢？
+      //我看到react-redux中并没有对ownProps的改变做类似的处理。我理解，ownProps是需要传递给被包裹组件的，如果ownProps发生改变了，那么被包裹组件接收的props一定发生了改变
+      //所以，此时的被包裹组件肯定要重新渲染。而对于state，因为需要根据reducer计算出stateProps传给被包裹组件，如果stateProps没有改变而且ownProps也没有改变时
+      //被包裹组件是不需要重新渲染的------就是这个逻辑,ownPros发生改变一定要更新，state发生改变不一定要更新
       if(stateChanged){
-        this.props = this.handleNewState(this.store.getState());
+        const nextStateProps = this.handleNewState(this.store.getState());
+        if(this.props !== nextStateProps){
+          this.props = nextStateProps;
+          this.shouldUpdate = true;
+        } else {
+          this.shouldUpdate = false;
+        }
+        
       }     
     } else {
       this.shouldUpdate = false;
