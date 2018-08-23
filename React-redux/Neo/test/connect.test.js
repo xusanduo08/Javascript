@@ -852,4 +852,170 @@ describe('connect', () => {
     expect(mapStateToPropsCalls).toBe(3)
     expect(spy).toHaveBeenCalledTimes(0)
   })
+
+  it('should not attempt to set state when dispatching in componentWillUnmount', () => {
+    const store = createStore(stringBuilder)
+    let mapStateToPropsCalls = 0
+
+    /*eslint-disable no-unused-vars */
+    @connect(
+      (state) => ({ calls: mapStateToPropsCalls++ }),
+      dispatch => ({ dispatch })
+    )
+    /*eslint-enable no-unused-vars */
+    class Container extends Component {
+      componentWillUnmount() {
+        this.props.dispatch({ type: 'APPEND', body: 'a' })
+      }
+      render() {
+        return <Passthrough {...this.props} />
+      }
+    }
+
+    const div = document.createElement('div')
+    ReactDOM.render(
+      <ProviderMock store={store}>
+        <Container />
+      </ProviderMock>,
+      div
+    )
+    expect(mapStateToPropsCalls).toBe(1)
+
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    ReactDOM.unmountComponentAtNode(div)
+    spy.mockRestore()
+    expect(spy).toHaveBeenCalledTimes(0)
+    expect(mapStateToPropsCalls).toBe(1)
+  })
+
+  it('should shallowly compare the selected state to prevent unnecessary updates', () => {
+    const store = createStore(stringBuilder)
+    const spy = jest.fn(() => ({}))
+    function render({ string }) {
+      spy()
+      return <Passthrough string={string}/>
+    }
+
+    @connect(
+      state => ({ string: state }),
+      dispatch => ({ dispatch })
+    )
+    class Container extends Component {
+      render() {
+        return render(this.props)
+      }
+    }
+
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <Container />
+      </ProviderMock>
+    )
+
+    const stub = testRenderer.root.findByType(Passthrough)
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(stub.props.string).toBe('')
+    store.dispatch({ type: 'APPEND', body: 'a' })
+    expect(spy).toHaveBeenCalledTimes(2)
+    store.dispatch({ type: 'APPEND', body: 'b' })
+    expect(spy).toHaveBeenCalledTimes(3)
+    store.dispatch({ type: 'APPEND', body: '' })
+    expect(spy).toHaveBeenCalledTimes(3)
+  })
+
+  it('should shallowly compare the merged state to prevent unnecessary updates', () => {
+    const store = createStore(stringBuilder)
+    const spy = jest.fn(() => ({}))
+    function render({ string, pass }) {
+      spy()
+      return <Passthrough string={string} pass={pass} passVal={pass.val} />
+    }
+
+    @connect(
+      state => ({ string: state }),
+      dispatch => ({ dispatch }),
+      (stateProps, dispatchProps, parentProps) => ({
+        ...dispatchProps,
+        ...stateProps,
+        ...parentProps
+      })
+    )
+    class Container extends Component {
+      render() {
+        return render(this.props)
+      }
+    }
+
+    class Root extends Component {
+      constructor(props) {
+        super(props)
+        this.state = { pass: '' }
+      }
+
+      render() {
+        return (
+          <ProviderMock store={store}>
+            <Container pass={this.state.pass} />
+          </ProviderMock>
+        )
+      }
+    }
+
+    const testRenderer = TestRenderer.create(<Root />)
+    const tree = testRenderer.root.instance
+    const stub = testRenderer.root.findByType(Passthrough)
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(stub.props.string).toBe('')
+    expect(stub.props.pass).toBe('')
+
+    store.dispatch({ type: 'APPEND', body: 'a' })
+    expect(spy).toHaveBeenCalledTimes(2)
+    expect(stub.props.string).toBe('a')
+    expect(stub.props.pass).toBe('')
+
+    tree.setState({ pass: '' })
+    expect(spy).toHaveBeenCalledTimes(2)
+    expect(stub.props.string).toBe('a')
+    expect(stub.props.pass).toBe('')
+
+    tree.setState({ pass: 'through' })
+    expect(spy).toHaveBeenCalledTimes(3)
+    expect(stub.props.string).toBe('a')
+    expect(stub.props.pass).toBe('through')
+
+    tree.setState({ pass: 'through' })
+    expect(spy).toHaveBeenCalledTimes(3)
+    expect(stub.props.string).toBe('a')
+    expect(stub.props.pass).toBe('through')
+
+    const obj = { prop: 'val' }
+    tree.setState({ pass: obj })
+    expect(spy).toHaveBeenCalledTimes(4)
+    expect(stub.props.string).toBe('a')
+    expect(stub.props.pass).toBe(obj)
+
+    tree.setState({ pass: obj })
+    expect(spy).toHaveBeenCalledTimes(4)
+    expect(stub.props.string).toBe('a')
+    expect(stub.props.pass).toBe(obj)
+
+    const obj2 = Object.assign({}, obj, { val: 'otherval' })
+    tree.setState({ pass: obj2 })
+    expect(spy).toHaveBeenCalledTimes(5)
+    expect(stub.props.string).toBe('a')
+    expect(stub.props.pass).toBe(obj2)
+
+    obj2.val = 'mutation'
+    tree.setState({ pass: obj2 })
+    expect(spy).toHaveBeenCalledTimes(5)
+    expect(stub.props.string).toBe('a')
+    expect(stub.props.passVal).toBe('otherval')
+  })
+
+  it('should throw an error if a component is not passed to the function returned by connect', () => {
+    expect(connect()).toThrow(
+      /You must pass a component to the function/
+    )
+  })
+
 })
