@@ -40,6 +40,10 @@ function connect(
   const initMergeProps = dealMergeProps(mergeProps);
   return function (component) {
 
+    if(!component){
+      throw Error('You must pass a component to the function');
+    }
+
     class Connect extends Component {
       constructor(props, context) {
         super(props, context);
