@@ -157,7 +157,8 @@ function connect(
     }
 
     Connect.contextTypes = {
-      [storeKey]: PropTypes.object
+      [storeKey]: PropTypes.object,
+      subscription: PropTypes.object
     }
 
     Connect.childContextTypes = {
