@@ -1,3 +1,4 @@
+import isPlainObject from './isPlainObject';
 
 //处理mapDispatchToProps
 function dealMapDispatchToProps(mapDispatchToProps) {
@@ -5,18 +6,32 @@ function dealMapDispatchToProps(mapDispatchToProps) {
   //如果没有传入mapDispatchToProps参数，那么要确保dispatch方法作为props传入到组件中
   if (!mapDispatchToProps) {
     return function constantSelector() {
-      return (dispatch)=> ({ dispatch })
+      return (dispatch) => ({ dispatch })
     }
   }
 
   //如果传入function
   if (typeof mapDispatchToProps === 'function') {
     return function () {
-      if(mapDispatchToProps.length !== 1){  // 根据参数数量判断是否依赖于connect组件的props值
+      if (mapDispatchToProps.length !== 1) {  // 根据参数数量判断是否依赖于connect组件的props值
         mapDispatchToProps.dependsOnOwnProps = true;
-        return mapDispatchToProps;
       }
-      return mapDispatchToProps;
+      const proxy = function mapToPropsProxy(dispatch, ownProps) {
+        console.log(proxy.dependsOnOwnProps, ownProps)
+        return proxy.dependsOnOwnProps ? 
+          proxy.mapDispatchToProps(dispatch, ownProps) : proxy.mapDispatchToProps(dispatch)
+      }
+
+      proxy.mapDispatchToProps = function (dispatch, ownProps) {
+        proxy.mapDispatchToProps = mapDispatchToProps;
+        proxy.dependsOnOwnProps = mapDispatchToProps.dependsOnOwnProps;
+        let dispatchProps = proxy(dispatch, ownProps);
+        if (!isPlainObject(dispatchProps)) {
+          console.error('/mapDispatchToProps\(\) in Connect\(Container\) must return a plain object/');
+        }
+        return dispatchProps;
+      }
+      return proxy;
     }
   }
 }
