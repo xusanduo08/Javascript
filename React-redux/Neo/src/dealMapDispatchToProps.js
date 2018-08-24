@@ -17,7 +17,6 @@ function dealMapDispatchToProps(mapDispatchToProps) {
         mapDispatchToProps.dependsOnOwnProps = true;
       }
       const proxy = function mapToPropsProxy(dispatch, ownProps) {
-        console.log(proxy.dependsOnOwnProps, ownProps)
         return proxy.dependsOnOwnProps ? 
           proxy.mapDispatchToProps(dispatch, ownProps) : proxy.mapDispatchToProps(dispatch)
       }
