@@ -22,6 +22,9 @@ function dealMapDispatchToProps(mapDispatchToProps) {
           proxy.mapDispatchToProps(dispatch, ownProps) : proxy.mapDispatchToProps(dispatch)
       }
 
+      //初次运行设置dependsOnOwnProps为true
+      proxy.dependsOnOwnProps = true;
+
       proxy.mapDispatchToProps = function (dispatch, ownProps) {
         proxy.mapDispatchToProps = mapDispatchToProps;
         proxy.dependsOnOwnProps = mapDispatchToProps.dependsOnOwnProps;

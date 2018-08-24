@@ -16,6 +16,9 @@ function dealMapStateToProps(mapStateToProps) {
           proxy.mapToProps(state, ownProps) : proxy.mapToProps(state)
       }
 
+      //初次运行默认设置dependsOnOwnProps为true，剩余次的运行就根据实际情况来
+      proxy.dependsOnOwnProps = true;
+
       proxy.mapToProps = function detectFactoryAndVerfiy(state, ownProps){
         proxy.mapToProps = mapStateToProps;
         proxy.dependsOnOwnProps = mapStateToProps.dependsOnOwnProps;
