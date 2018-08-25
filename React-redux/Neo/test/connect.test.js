@@ -1143,4 +1143,62 @@ describe('connect', () => {
     spy.mockRestore()
   })
 
+  it('should recalculate the state and rebind the actions on hot update', () => {
+    const store = createStore(() => {})
+
+    @connect(
+      null,
+      () => ({ scooby: 'doo' })
+    )
+    class ContainerBefore extends Component {
+      render() {
+        return (
+          <Passthrough {...this.props} />
+        )
+      }
+    }
+
+    @connect(
+      () => ({ foo: 'baz' }),
+      () => ({ scooby: 'foo' })
+    )
+    class ContainerAfter extends Component {
+      render() {
+        return (
+          <Passthrough {...this.props} />
+        )
+      }
+    }
+
+    @connect(
+      () => ({ foo: 'bar' }),
+      () => ({ scooby: 'boo' })
+    )
+    class ContainerNext extends Component {
+      render() {
+        return (
+          <Passthrough {...this.props} />
+        )
+      }
+    }
+
+    let container
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <ContainerBefore ref={instance => container = instance} />
+      </ProviderMock>
+    )
+    const stub = testRenderer.root.findByType(Passthrough)
+    expect(stub.props.foo).toEqual(undefined)
+    expect(stub.props.scooby).toEqual('doo')
+
+    imitateHotReloading(ContainerBefore, ContainerAfter, container)
+    expect(stub.props.foo).toEqual('baz')
+    expect(stub.props.scooby).toEqual('foo')
+
+    imitateHotReloading(ContainerBefore, ContainerNext, container)
+    expect(stub.props.foo).toEqual('bar')
+    expect(stub.props.scooby).toEqual('boo')
+  })
+
 })
