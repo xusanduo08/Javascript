@@ -31,6 +31,7 @@ function connect(
     withRef = false, // 如果这个参数为true，那么被包裹的组件会通过getWrappedInstance()方法被暴露出来。
     renderCountProp = undefined, //如果传入这个参数，那么重复渲染次数就会以同名属性传入被包裹组件的props中
     storeKey = 'store', // 上下文对象中store对应的key值
+    getDisplayName = name => `Connect(${name})`,
     ...extraOptions
   } = {}
 ) {
@@ -45,6 +46,9 @@ function connect(
     if (!component) {
       throw Error('You must pass a component to the function');
     }
+
+    const wrappedComponentName = component.displayName || component.name || 'Component'
+    const displayName = getDisplayName(wrappedComponentName);
 
     class Connect extends Component {
       constructor(props, context) {
@@ -170,6 +174,7 @@ function connect(
     Connect.childContextTypes = {
       subscription: PropTypes.object
     }
+    Connect.displayName = displayName;
 
     // 处理组件热更新
     // 我理解的热更新： 除了render和constructor两个属性外，手动替换掉其他所有函数类属性
