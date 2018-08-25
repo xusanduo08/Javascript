@@ -1201,4 +1201,108 @@ describe('connect', () => {
     expect(stub.props.scooby).toEqual('boo')
   })
 
+  it('should persist listeners through hot update', () => {
+    const ACTION_TYPE = "ACTION"
+    const store = createStore((state = {actions: 0}, action) => {
+      switch (action.type) {
+        case ACTION_TYPE: {
+          return {
+            actions: state.actions + 1
+          }
+        }
+        default:
+          return state
+      }
+    })
+
+    @connect(
+      (state) => ({ actions: state.actions })
+    )
+    class Child extends Component {
+      render() {
+        return <Passthrough {...this.props}/>
+      }
+    }
+
+    @connect(
+      () => ({ scooby: 'doo' })
+    )
+    class ParentBefore extends Component {
+      render() {
+        return (
+          <Child />
+        )
+      }
+    }
+
+    @connect(
+      () => ({ scooby: 'boo' })
+    )
+    class ParentAfter extends Component {
+      render() {
+        return (
+          <Child />
+        )
+      }
+    }
+
+    let container
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <ParentBefore ref={instance => container = instance}/>
+      </ProviderMock>
+    )
+
+    const stub = testRenderer.root.findByType(Passthrough)
+
+    imitateHotReloading(ParentBefore, ParentAfter, container)
+
+    store.dispatch({type: ACTION_TYPE})
+
+    expect(stub.props.actions).toEqual(1)
+  })
+
+  it('should set the displayName correctly', () => {
+    expect(connect(state => state)(
+      class Foo extends Component {
+        render() {
+          return <div />
+        }
+      }
+    ).displayName).toBe('Connect(Foo)')
+
+    expect(connect(state => state)(
+      createClass({
+        displayName: 'Bar',
+        render() {
+          return <div />
+        }
+      })
+    ).displayName).toBe('Connect(Bar)')
+
+    expect(connect(state => state)(
+      // eslint: In this case, we don't want to specify a displayName because we're testing what
+      // happens when one isn't defined.
+      /* eslint-disable react/display-name */
+      createClass({
+        render() {
+          return <div />
+        }
+      })
+      /* eslint-enable react/display-name */
+    ).displayName).toBe('Connect(Component)')
+  })
+
+  it('should expose the wrapped component as WrappedComponent', () => {
+    class Container extends Component {
+      render() {
+        return <Passthrough />
+      }
+    }
+
+    const decorator = connect(state => state)
+    const decorated = decorator(Container)
+
+    expect(decorated.WrappedComponent).toBe(Container)
+  })
 })
