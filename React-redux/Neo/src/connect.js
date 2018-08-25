@@ -21,6 +21,7 @@ import dealMergeProps from './dealMergeProps';
   2018.8.21: 对于<Connect1><Connect2></Connect2></Connect1>这种情况需要额外处理，主要是订阅store时有些变化，组件会将自己的订阅实例暴露在上下文中。
 */
 
+let hotReloadingVersion = 0; // 热更新标识
 
 function connect(
   mapStateToProps,
@@ -29,7 +30,6 @@ function connect(
   {
     withRef = false, // 如果这个参数为true，那么被包裹的组件会通过getWrappedInstance()方法被暴露出来。
     renderCountProp = undefined, //如果传入这个参数，那么重复渲染次数就会以同名属性传入被包裹组件的props中
-    shouldHandleStateChanges = false, //如果传入这个参数，那么state的变化将不会反应到视图上
     storeKey = 'store', // 上下文对象中store对应的key值
     ...extraOptions
   } = {}
@@ -38,9 +38,11 @@ function connect(
   const initMapDispatchToProps = dealMapDispatchToProps(mapDispatchToProps);
   const initMapStateToProps = dealMapStateToProps(mapStateToProps);
   const initMergeProps = dealMergeProps(mergeProps);
+  const version = hotReloadingVersion++;
+  const shouldHandleStateChanges = Boolean(mapStateToProps); //如果mapStateToProps没有传递的话，则connect组件不会去订阅store的变化。而且这个参数不应暴露出来让用户输入
   return function (component) {
 
-    if(!component){
+    if (!component) {
       throw Error('You must pass a component to the function');
     }
 
@@ -48,8 +50,8 @@ function connect(
       constructor(props, context) {
         super(props, context);
         this.store = this.context[storeKey]; //从上下文中获取store，由Provider将store放到上下文中
-        
-        
+
+        this.version = version;
         this.setWrappedInstance = this.setWrappedInstance.bind(this);
         this.renderCount = 0;   // 渲染次数
         this.propsMode = Boolean(props[storeKey]);//属性模式，true 组件从props中获取store，false组件从上下文中获取store
@@ -60,7 +62,7 @@ function connect(
       getChildContext() {
         const subscription = this.propsMode ? null : this.subscription;//如果组件是从prosp获取store的，则其订阅实例对从上下文获取store的组件是透明的
         return {
-          subscription : subscription || this.context.subscription //返回自身或者上层组件的订阅实例
+          subscription: subscription || this.context.subscription //返回自身或者上层组件的订阅实例
         }
       }
 
@@ -73,10 +75,9 @@ function connect(
       }
 
       componentDidMount() {
-        if (shouldHandleStateChanges) { return }
-        if (Boolean(mapStateToProps)) { // 如果mapStateToProps没有传递的话，则connect组件不会去订阅store的变化。
-          this.subscription.trySubscribe()
-        }
+        if (!shouldHandleStateChanges) { return }
+        
+        this.subscription.trySubscribe()
         this.selector.run(this.props);  // 考虑到如果组件在componentWillMount阶段调用dispatch发布action更改state，那么就需要重新计算状态和渲染
         if (this.selector.shouldUpdate) {
           this.forceUpdate();
@@ -89,7 +90,8 @@ function connect(
         this.selector.run(this.props);
       }
 
-      initSubscription(){
+      initSubscription() {
+        if (!shouldHandleStateChanges) { return }
         const parentSub = (this.propsMode ? this.props : this.context)['subscription'];//根据propsMode从props或者上下文中获取订阅实例
         this.subscription = new Subscription(this.store, parentSub, this.onStateChange.bind(this)); // 抽取订阅动作到订阅实例中，便于管理
         this.notifyNestedSubs = this.subscription.notifyNestedSubs.bind(this.subscription); // 通知子组件的功能
@@ -98,7 +100,7 @@ function connect(
       onStateChange() {
         //state如果发生变化，就要重新计算props值，并让组件re-render。
         this.selector.run(this.props);
-        if(!this.selector.shouldUpdate){
+        if (!this.selector.shouldUpdate) {
           this.notifyNestedSubs();
         } else {
           this.componentDidUpdate = this.notifyNestedSubsOnComponentDidUpdate;
@@ -106,7 +108,7 @@ function connect(
         }
       }
 
-      notifyNestedSubsOnComponentDidUpdate(){
+      notifyNestedSubsOnComponentDidUpdate() {
         this.componentDidUpdate = undefined;  //置undefined，避免非store改变引起的更新通知子组件
         this.notifyNestedSubs();
       }
@@ -118,17 +120,17 @@ function connect(
         }
         this.store = null;
         // 退订之后onStateChange应该就不会被调用了,所以这地方应该可以不用管run方法啊，为什么还要置空函数呢？
-        this.selector.run = function(){}; // 主要考虑到dispatch一个action的同时组件正准备卸载，此时组件的onStateChange可能已经处于触发状态，为了避免不必要的计算，需要去把selector.run置成空函数
+        this.selector.run = function () { }; // 主要考虑到dispatch一个action的同时组件正准备卸载，此时组件的onStateChange可能已经处于触发状态，为了避免不必要的计算，需要去把selector.run置成空函数
         //但是我看代码，订阅函数的执行都是按照订阅顺序来的，如果在第二个订阅函数中卸载第一个订阅函数对应的组件，这个时候第一个组件的订阅函数应该运行完了才对啊，想不通
         this.subscription = null;
-        this.notifyNestedSubs = function(){};
+        this.notifyNestedSubs = function () { };
       }
 
       getWrappedInstance() { //获取被包裹组件实例的引用
         return this.wrappedInstance;
       }
 
-      isSubscribed(){
+      isSubscribed() {
         return Boolean(this.subscription) && this.subscription.isSubscribed()
       }
 
@@ -147,7 +149,7 @@ function connect(
         if (renderCountProp) {  //是否将重复渲染次数传入props中
           withExtras[renderCountProp] = this.renderCount++;
         }
-        if(this.propsMode && this.subscription) {
+        if (this.propsMode && this.subscription) {
           withExtras.subscription = this.subscription;
         }
         return withExtras;
@@ -168,11 +170,33 @@ function connect(
     Connect.childContextTypes = {
       subscription: PropTypes.object
     }
+
+    // 处理组件热更新
+    // 我理解的热更新： 除了render和constructor两个属性外，手动替换掉其他所有函数类属性
+    //这种情况就要重新生成Connect组件的selector和初始化subscription
+    if (process.env.NODE_ENV !== 'production') {
+      Connect.prototype.componentWillUpdate = function componentWillUpdate(){
+        if(this.version !== version){
+          this.version = version; //  通过version判断是否是热更新的。
+          this.initSelector();  //重新计算生成selector
+
+          let oldListeners = [];
+          if(this.subscription){
+            oldListeners = this.subscription.listener.get(); // 获取到内部子组件的订阅函数
+            this.subscription.tryUnsubscribe(); //退订当前的订阅
+          }
+
+          this.initSubscription();  // 重新初始化订阅实例
+          if(shouldHandleStateChanges){
+            this.subscription.trySubscribe(); // 重新订阅store
+            //将热更新前Connect组件订阅实例中内包含的其他子connect组件的订阅函数放到现在热更新后新生成的订阅实例中
+            oldListeners.forEach(listener => this.subscription.listener.subscribe(listener));
+          }
+        }
+      }
+    }
     return Connect;
   }
 }
-
-
-
 
 export default connect
