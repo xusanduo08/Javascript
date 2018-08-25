@@ -175,6 +175,7 @@ function connect(
       subscription: PropTypes.object
     }
     Connect.displayName = displayName;
+    Connect.WrappedComponent = component
 
     // 处理组件热更新
     // 我理解的热更新： 除了render和constructor两个属性外，手动替换掉其他所有函数类属性
