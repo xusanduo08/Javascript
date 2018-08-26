@@ -41,7 +41,7 @@ function connect(
   const initMapDispatchToProps = dealMapDispatchToProps(mapDispatchToProps);
   const initMapStateToProps = dealMapStateToProps(mapStateToProps);
   const initMergeProps = dealMergeProps(mergeProps);
-  const version = hotReloadingVersion++;
+  const version = hotReloadingVersion++; //因为闭包，每个组件在渲染时都有自己的version，而且是逐个递增的。
   const shouldHandleStateChanges = Boolean(mapStateToProps); //如果mapStateToProps没有传递的话，则connect组件不会去订阅store的变化。而且这个参数不应暴露出来让用户输入
   return function (component) {
 
@@ -180,11 +180,11 @@ function connect(
     Connect.WrappedComponent = component
 
     // 处理组件热更新
-    // 我理解的热更新： 除了render和constructor两个属性外，手动替换掉其他所有函数类属性
+    // 我理解的热更新： connect组件的更新称为热更新
     //这种情况就要重新生成Connect组件的selector和初始化subscription
     if (process.env.NODE_ENV !== 'production') {
       Connect.prototype.componentWillUpdate = function componentWillUpdate(){
-        if(this.version !== version){
+        if(this.version !== version){ // 热更新的时候外层connect重新渲染了，所以这个时候这个表达式返回false
           this.version = version; //  通过version判断是否是热更新的。
           this.initSelector();  //重新计算生成selector
 
