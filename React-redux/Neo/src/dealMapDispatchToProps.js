@@ -28,9 +28,9 @@ function dealMapDispatchToProps(mapDispatchToProps) {
         proxy.mapDispatchToProps = mapDispatchToProps;
         proxy.dependsOnOwnProps = mapDispatchToProps.dependsOnOwnProps;
         let dispatchProps = proxy(dispatch, ownProps);
-
+        
         if (typeof dispatchProps === 'function') { // 支持mapStateToProps返回一个函数
-          proxy.mapToProps = dispatchProps;
+          proxy.mapDispatchToProps = dispatchProps;
           proxy.dependsOnOwnProps = dispatchProps.length !== 1 ? true : false;
           dispatchProps = proxy(dispatch, ownProps);
         }

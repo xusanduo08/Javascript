@@ -73,7 +73,12 @@ export default class Selector {
         return;
       }
       if (propsChanged) {
-        this.props = this.handleNewProps(nextOwnProps);
+        let nextProps = this.handleNewProps(nextOwnProps);
+        if(!shallowEqual(this.props, nextProps)){ // 加入浅比较，避免不必要的更新。
+          this.props = nextProps;
+        } else {
+          this.shouldUpdate = false;
+        }
         return;
       }
 
