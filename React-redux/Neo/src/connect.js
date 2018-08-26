@@ -43,6 +43,8 @@ function connect(
   const initMergeProps = dealMergeProps(mergeProps);
   const version = hotReloadingVersion++; //因为闭包，每个组件在渲染时都有自己的version，而且是逐个递增的。
   const shouldHandleStateChanges = Boolean(mapStateToProps); //如果mapStateToProps没有传递的话，则connect组件不会去订阅store的变化。而且这个参数不应暴露出来让用户输入
+  
+  //每个connect组件都处在自己的闭包下，使用者上面声明的方法。
   return function (component) {
 
     if (!component) {
@@ -184,10 +186,13 @@ function connect(
     //这种情况就要重新生成Connect组件的selector和初始化subscription
     if (process.env.NODE_ENV !== 'production') {
       Connect.prototype.componentWillUpdate = function componentWillUpdate(){
-        if(this.version !== version){ // 热更新的时候外层connect重新渲染了，所以这个时候这个表达式返回false
+        
+        //想一下，为什么热更新后这地方的version会变？我们把热更新的组件叫target，新属性的来源对应的组件叫source
+        //首先，热更新后，target的componentWillUpdate方法改变了，在这个方法内部，我们获取的version变量，是componentWillUpdate方法被定义时所在的作用域的变量
+        //所以，热更新后，componentWillUpdate方法中拿到的version值就已经不是target所处闭包作用域中的version值了，而是source所处的闭包作用域的version值。
+        if(this.version !== version){
           this.version = version; //  通过version判断是否是热更新的。
           this.initSelector();  //重新计算生成selector
-
           let oldListeners = [];
           if(this.subscription){
             oldListeners = this.subscription.listener.get(); // 获取到内部子组件的订阅函数
