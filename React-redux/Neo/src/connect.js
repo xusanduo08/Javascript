@@ -58,7 +58,9 @@ function connect(
       constructor(props, context) {
         super(props, context);
         this.store = props[storeKey] || context[storeKey]; //从props中或者上下文中获取store，由Provider将store放到上下文中
-
+        if(!this.store){
+          throw Error('Could not find "store"')
+        }
         this.version = version;
         this.setWrappedInstance = this.setWrappedInstance.bind(this);
         this.renderCount = 0;   // 渲染次数
@@ -135,6 +137,9 @@ function connect(
       }
 
       getWrappedInstance() { //获取被包裹组件实例的引用
+        if(!this.withRef){  // 获取被包裹组件实例需要传入withRef=true，否则报错
+          throw Error('/To access the wrapped instance, you need to specify \{ withRef: true \} in the options argument of the connect\(\) call\./')
+        }
         return this.wrappedInstance;
       }
 
