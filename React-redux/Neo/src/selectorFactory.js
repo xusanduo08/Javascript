@@ -67,13 +67,14 @@ export default class Selector {
       || !areStatesEqual(this.ownState, this.store.getState())) {  //浅比较，不会处理对象的突变
       const propsChanged = !shallowEqual(nextOwnProps, this.ownProps);
       const stateChanged = !areStatesEqual(this.ownState, this.store.getState());
-
       this.shouldUpdate = true;
       if (propsChanged && stateChanged) {
         this.props = this.handleNewPropsAndNewState(nextOwnProps, this.store.getState())
+        return;
       }
       if (propsChanged) {
         this.props = this.handleNewProps(nextOwnProps);
+        return;
       }
 
       //有state改变，并不一定代表计算出来的要传入包裹组件的props也会有变更，那ownProsp改变了，是不是也是同样的处理呢？
@@ -88,7 +89,7 @@ export default class Selector {
         } else {
           this.shouldUpdate = false;
         }
-
+        return;
       }
     } else {
       this.shouldUpdate = false;
