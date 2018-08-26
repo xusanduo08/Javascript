@@ -1305,4 +1305,412 @@ describe('connect', () => {
 
     expect(decorated.WrappedComponent).toBe(Container)
   })
+
+  it('should hoist non-react statics from wrapped component', () => {
+    class Container extends Component {
+      render() {
+        return <Passthrough />
+      }
+    }
+
+    Container.howIsRedux = () => 'Awesome!'
+    Container.foo = 'bar'
+
+    const decorator = connect(state => state)
+    const decorated = decorator(Container)
+
+    expect(decorated.howIsRedux).toBeInstanceOf(Function)
+    expect(decorated.howIsRedux()).toBe('Awesome!')
+    expect(decorated.foo).toBe('bar')
+  })
+
+  it('should use the store from the props instead of from the context if present', () => {
+    class Container extends Component {
+      render() {
+        return <Passthrough />
+      }
+    }
+
+    let actualState
+
+    const expectedState = { foos: {} }
+    const decorator = connect(state => {
+      actualState = state
+      return {}
+    })
+    const Decorated = decorator(Container)
+    const mockStore = {
+      dispatch: () => {},
+      subscribe: () => {},
+      getState: () => expectedState
+    }
+
+    TestRenderer.create(<Decorated store={mockStore} />)
+
+    expect(actualState).toEqual(expectedState)
+  })
+
+  it('should throw an error if the store is not in the props or context', () => {
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    
+    class Container extends Component {
+      render() {
+        return <Passthrough />
+      }
+    }
+
+    const decorator = connect(() => {})
+    const Decorated = decorator(Container)
+
+    expect(() =>
+      TestRenderer.create(<Decorated />)
+    ).toThrow(
+      /Could not find "store"/
+    )
+
+    spy.mockRestore()
+  })
+
+  it('should throw when trying to access the wrapped instance if withRef is not specified', () => {
+    const store = createStore(() => ({}))
+
+    class Container extends Component {
+      render() {
+        return <Passthrough />
+      }
+    }
+
+    const decorator = connect(state => state)
+    const Decorated = decorator(Container)
+
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <Decorated />
+      </ProviderMock>
+    )
+
+    const decorated = testRenderer.root.findByType(Decorated)
+    expect(() => decorated.instance.getWrappedInstance()).toThrow(
+      /To access the wrapped instance, you need to specify \{ withRef: true \} in the options argument of the connect\(\) call\./
+    )
+  })
+
+  it('should return the instance of the wrapped component for use in calling child methods', () => {
+    const store = createStore(() => ({}))
+
+    const someData = {
+      some: 'data'
+    }
+
+    class Container extends Component {
+      someInstanceMethod() {
+        return someData
+      }
+
+      render() {
+        return <Passthrough />
+      }
+    }
+
+    const decorator = connect(state => state, null, null, { withRef: true })
+    const Decorated = decorator(Container)
+
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <Decorated />
+      </ProviderMock>
+    )
+
+    const decorated = testRenderer.root.findByType(Decorated)
+
+    expect(() => decorated.someInstanceMethod()).toThrow()
+    expect(decorated.instance.getWrappedInstance().someInstanceMethod()).toBe(someData)
+    expect(decorated.instance.wrappedInstance.someInstanceMethod()).toBe(someData)
+  })
+
+  it('should wrap impure components without supressing updates', () => {
+    const store = createStore(() => ({}))
+
+    class ImpureComponent extends Component {
+      render() {
+        return <Passthrough statefulValue={this.context.statefulValue} />
+      }
+    }
+
+    ImpureComponent.contextTypes = {
+      statefulValue: PropTypes.number
+    }
+
+    const decorator = connect(state => state, null, null, { pure: false })
+    const Decorated = decorator(ImpureComponent)
+
+    class StatefulWrapper extends Component {
+      constructor() {
+        super()
+        this.state = { value: 0 }
+      }
+
+      getChildContext() {
+        return {
+          statefulValue: this.state.value
+        }
+      }
+
+      render() {
+        return <Decorated />
+      }
+    }
+
+    StatefulWrapper.childContextTypes = {
+      statefulValue: PropTypes.number
+    }
+
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <StatefulWrapper />
+      </ProviderMock>
+    )
+
+    const target = testRenderer.root.findByType(Passthrough)
+    const wrapper = testRenderer.root.findByType(StatefulWrapper).instance
+    expect(target.props.statefulValue).toEqual(0)
+    wrapper.setState({ value: 1 })
+    expect(target.props.statefulValue).toEqual(1)
+  })
+
+  it('calls mapState and mapDispatch for impure components', () => {
+    const store = createStore(() => ({
+      foo: 'foo',
+      bar: 'bar'
+    }))
+
+    const mapStateSpy = jest.fn()
+    const mapDispatchSpy = jest.fn().mockReturnValue({})
+
+    class ImpureComponent extends Component {
+      render() {
+        return <Passthrough statefulValue={this.props.value} />
+      }
+    }
+
+    const decorator = connect(
+      (state, { storeGetter }) => {
+        mapStateSpy()
+        return { value: state[storeGetter.storeKey] }
+      },
+      mapDispatchSpy,
+      null,
+      { pure: false }
+    )
+    const Decorated = decorator(ImpureComponent)
+
+    class StatefulWrapper extends Component {
+      constructor() {
+        super()
+        this.state = {
+          storeGetter: { storeKey: 'foo' }
+        }
+      }
+      render() {
+        return <Decorated storeGetter={this.state.storeGetter} />
+      }
+    }
+
+
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <StatefulWrapper />
+      </ProviderMock>
+    )
+
+    const target = testRenderer.root.findByType(Passthrough)
+    const wrapper = testRenderer.root.findByType(StatefulWrapper).instance
+
+    expect(mapStateSpy).toHaveBeenCalledTimes(2)
+    expect(mapDispatchSpy).toHaveBeenCalledTimes(2)
+    expect(target.props.statefulValue).toEqual('foo')
+
+    // Impure update
+    const storeGetter = wrapper.state.storeGetter
+    storeGetter.storeKey = 'bar'
+    wrapper.setState({ storeGetter })
+
+    expect(mapStateSpy).toHaveBeenCalledTimes(3)
+    expect(mapDispatchSpy).toHaveBeenCalledTimes(3)
+    expect(target.props.statefulValue).toEqual('bar')
+  })
+
+  it('should pass state consistently to mapState', () => {
+    const store = createStore(stringBuilder)
+
+    store.dispatch({ type: 'APPEND', body: 'a' })
+    let childMapStateInvokes = 0
+
+    @connect(state => ({ state }), null, null, { withRef: true })
+    class Container extends Component {
+
+      emitChange() {
+        store.dispatch({ type: 'APPEND', body: 'b' })
+      }
+
+      render() {
+        return (
+          <div>
+            <button ref="button" onClick={this.emitChange.bind(this)}>change</button>
+            <ChildContainer parentState={this.props.state} />
+          </div>
+        )
+      }
+    }
+
+    @connect((state, parentProps) => {
+      childMapStateInvokes++
+      // The state from parent props should always be consistent with the current state
+      expect(state).toEqual(parentProps.parentState)
+      return {}
+    })
+    class ChildContainer extends Component {
+      render() {
+        return <Passthrough {...this.props}/>
+      }
+    }
+
+    const testRenderer = TestRenderer.create(
+      <ProviderMock store={store}>
+        <Container />
+      </ProviderMock>
+    )
+
+    expect(childMapStateInvokes).toBe(1)
+
+    // The store state stays consistent when setState calls are batched
+    ReactDOM.unstable_batchedUpdates(() => {
+      store.dispatch({ type: 'APPEND', body: 'c' })
+    })
+    expect(childMapStateInvokes).toBe(2)
+
+    // setState calls DOM handlers are batched
+    const button = testRenderer.root.findByType('button')
+    button.props.onClick()
+    expect(childMapStateInvokes).toBe(3)
+
+    store.dispatch({ type: 'APPEND', body: 'd' })
+    expect(childMapStateInvokes).toBe(4)
+  })
+
+  it('should not render the wrapped component when mapState does not produce change', () => {
+    const store = createStore(stringBuilder)
+    let renderCalls = 0
+    let mapStateCalls = 0
+
+    @connect(() => {
+      mapStateCalls++
+      return {} // no change!
+    })
+    class Container extends Component {
+      render() {
+        renderCalls++
+        return <Passthrough {...this.props} />
+      }
+    }
+
+    TestRenderer.create(
+      <ProviderMock store={store}>
+        <Container />
+      </ProviderMock>
+    )
+
+    expect(renderCalls).toBe(1)
+    expect(mapStateCalls).toBe(1)
+
+    store.dispatch({ type: 'APPEND', body: 'a' })
+
+    // After store a change mapState has been called
+    expect(mapStateCalls).toBe(2)
+    // But render is not because it did not make any actual changes
+    expect(renderCalls).toBe(1)
+  })
+
+  it('should bail out early if mapState does not depend on props', () => {
+    const store = createStore(stringBuilder)
+    let renderCalls = 0
+    let mapStateCalls = 0
+
+    @connect(state => {
+      mapStateCalls++
+      return state === 'aaa' ? { change: 1 } : {}
+    })
+    class Container extends Component {
+      render() {
+        renderCalls++
+        return <Passthrough {...this.props} />
+      }
+    }
+
+    TestRenderer.create(
+      <ProviderMock store={store}>
+        <Container />
+      </ProviderMock>
+    )
+
+    expect(renderCalls).toBe(1)
+    expect(mapStateCalls).toBe(1)
+
+    const spy = jest.spyOn(Container.prototype, 'setState')
+
+    store.dispatch({ type: 'APPEND', body: 'a' })
+    expect(mapStateCalls).toBe(2)
+    expect(renderCalls).toBe(1)
+    expect(spy).toHaveBeenCalledTimes(0)
+
+    store.dispatch({ type: 'APPEND', body: 'a' })
+    expect(mapStateCalls).toBe(3)
+    expect(renderCalls).toBe(1)
+    expect(spy).toHaveBeenCalledTimes(0)
+
+    store.dispatch({ type: 'APPEND', body: 'a' })
+    expect(mapStateCalls).toBe(4)
+    expect(renderCalls).toBe(2)
+    expect(spy).toHaveBeenCalledTimes(1)
+
+    spy.mockRestore()
+  })
+
+  it('should not swallow errors when bailing out early', () => {
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+    const store = createStore(stringBuilder)
+    let renderCalls = 0
+    let mapStateCalls = 0
+
+    @connect(state => {
+      mapStateCalls++
+      if (state === 'a') {
+        throw new Error('Oops')
+      } else {
+        return {}
+      }
+    })
+    class Container extends Component {
+      render() {
+        renderCalls++
+        return <Passthrough {...this.props} />
+      }
+    }
+
+    TestRenderer.create(
+      <ProviderMock store={store}>
+        <Container />
+      </ProviderMock>
+    )
+
+    expect(renderCalls).toBe(1)
+    expect(mapStateCalls).toBe(1)
+    expect(
+      () => store.dispatch({ type: 'APPEND', body: 'a' })
+    ).toThrow()
+
+    spy.mockRestore()
+  })
+
+  
 })
