@@ -5,6 +5,7 @@ import dealMapStateToProps from './dealMapStateToProps.js';
 import Subscription from './Subscription';
 import Selector from './selectorFactory';
 import dealMergeProps from './dealMergeProps';
+import hoistStatics from './hoist-non-react-static';
 /*
   react-redux的主要功能就是让react的组件与redux的store关联起来，也就是订阅到store上。
   这份工作靠的主要就是connect方法。
@@ -19,6 +20,7 @@ import dealMergeProps from './dealMergeProps';
   2018.8.9: 处理renderCountProp/shouldHandleStateChanges
   2018.8.10： 控制组件的shouldComponentUpdate
   2018.8.21: 对于<Connect1><Connect2></Connect2></Connect1>这种情况需要额外处理，主要是订阅store时有些变化，组件会将自己的订阅实例暴露在上下文中。
+  2018.8.26: 增加对非react静态属性的处理
 */
 
 let hotReloadingVersion = 0; // 热更新标识
@@ -201,7 +203,7 @@ function connect(
         }
       }
     }
-    return Connect;
+    return hoistStatics(Connect, component);
   }
 }
 
