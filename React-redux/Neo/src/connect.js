@@ -137,7 +137,7 @@ function connect(
       }
 
       getWrappedInstance() { //获取被包裹组件实例的引用
-        if(!this.withRef){  // 获取被包裹组件实例需要传入withRef=true，否则报错
+        if(!withRef){  // 获取被包裹组件实例需要传入withRef=true，否则报错
           throw Error('/To access the wrapped instance, you need to specify \{ withRef: true \} in the options argument of the connect\(\) call\./')
         }
         return this.wrappedInstance;
