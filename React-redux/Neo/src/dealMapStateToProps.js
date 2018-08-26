@@ -24,6 +24,12 @@ function dealMapStateToProps(mapStateToProps) {
         proxy.dependsOnOwnProps = mapStateToProps.dependsOnOwnProps;
         let props = proxy(state, ownProps);
         
+        if(typeof props === 'function'){ // 支持mapStateToProps返回一个函数
+          proxy.mapToProps = props;
+          proxy.dependsOnOwnProps = props.length !== 1 ? true : false;
+          props = proxy(state, ownProps);
+        }
+
         if(!isPlainObject(props)){
           console.error('/mapStateToProps\(\) in Connect\(Container\) must return a plain object/');
         }
