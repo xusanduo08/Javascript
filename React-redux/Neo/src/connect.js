@@ -54,6 +54,18 @@ function connect(
     const wrappedComponentName = component.displayName || component.name || 'Component'
     const displayName = getDisplayName(wrappedComponentName);
 
+    const selectorFactoryOptions = {
+      ...extraOptions,
+      getDisplayName,
+      renderCountProp,
+      shouldHandleStateChanges,
+      storeKey,
+      withRef,
+      displayName,
+      wrappedComponentName,
+      component
+    }
+
     class Connect extends Component {
       constructor(props, context) {
         super(props, context);
@@ -95,7 +107,7 @@ function connect(
       }
 
       initSelector() {
-        this.selector = new Selector(initMapStateToProps, initMapDispatchToProps, initMergeProps, this.store)    //selector用来计算状态
+        this.selector = new Selector(initMapStateToProps, initMapDispatchToProps, initMergeProps, this.store, selectorFactoryOptions)    //selector用来计算状态
         //从store中拿到state，并用mapStateToProsp、mapDispatchToProps计算出要传入component的props
         this.selector.run(this.props);
       }
