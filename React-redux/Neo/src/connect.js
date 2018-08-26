@@ -57,7 +57,7 @@ function connect(
     class Connect extends Component {
       constructor(props, context) {
         super(props, context);
-        this.store = this.context[storeKey]; //从上下文中获取store，由Provider将store放到上下文中
+        this.store = props[storeKey] || context[storeKey]; //从props中或者上下文中获取store，由Provider将store放到上下文中
 
         this.version = version;
         this.setWrappedInstance = this.setWrappedInstance.bind(this);
