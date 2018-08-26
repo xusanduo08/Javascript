@@ -17,7 +17,7 @@ function dealMapDispatchToProps(mapDispatchToProps) {
         mapDispatchToProps.dependsOnOwnProps = true;
       }
       const proxy = function mapToPropsProxy(dispatch, ownProps) {
-        return proxy.dependsOnOwnProps ? 
+        return proxy.dependsOnOwnProps ?
           proxy.mapDispatchToProps(dispatch, ownProps) : proxy.mapDispatchToProps(dispatch)
       }
 
@@ -28,6 +28,13 @@ function dealMapDispatchToProps(mapDispatchToProps) {
         proxy.mapDispatchToProps = mapDispatchToProps;
         proxy.dependsOnOwnProps = mapDispatchToProps.dependsOnOwnProps;
         let dispatchProps = proxy(dispatch, ownProps);
+
+        if (typeof dispatchProps === 'function') { // 支持mapStateToProps返回一个函数
+          proxy.mapToProps = dispatchProps;
+          proxy.dependsOnOwnProps = dispatchProps.length !== 1 ? true : false;
+          dispatchProps = proxy(dispatch, ownProps);
+        }
+
         if (!isPlainObject(dispatchProps)) {
           console.error('/mapDispatchToProps\(\) in Connect\(Container\) must return a plain object/');
         }
