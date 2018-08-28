@@ -1712,5 +1712,251 @@ describe('connect', () => {
     spy.mockRestore()
   })
 
-  
+  it('should allow providing a factory function to mapStateToProps', () => {
+    let updatedCount = 0
+    let memoizedReturnCount = 0
+    const store = createStore(() => ({ value: 1 }))
+
+    const mapStateFactory = () => {
+      let lastProp, lastVal, lastResult
+      return (state, props) => {
+        if (props.name === lastProp && lastVal === state.value) {
+          memoizedReturnCount++
+          return lastResult
+        }
+        lastProp = props.name
+        lastVal = state.value
+        return lastResult = { someObject: { prop: props.name, stateVal: state.value } }
+      }
+    }
+
+    @connect(mapStateFactory)
+    class Container extends Component {
+      componentWillUpdate() {
+        updatedCount++
+      }
+      render() {
+        return <Passthrough {...this.props} />
+      }
+    }
+
+    TestRenderer.create(
+      <ProviderMock store={store}>
+        <div>
+          <Container name="a" />
+          <Container name="b" />
+        </div>
+      </ProviderMock>
+    )
+
+    store.dispatch({ type: 'test' })
+    expect(updatedCount).toBe(0)
+    expect(memoizedReturnCount).toBe(2)
+  })
+
+
+  it('should allow a mapStateToProps factory consuming just state to return a function that gets ownProps', () => {
+    const store = createStore(() => ({ value: 1 }))
+
+    let initialState
+    let initialOwnProps
+    let secondaryOwnProps
+    const mapStateFactory = function (factoryInitialState) {
+      initialState = factoryInitialState
+      initialOwnProps = arguments[1];
+      return (state, props) => {
+        secondaryOwnProps = props
+        return { }
+      }
+    }
+
+    @connect(mapStateFactory)
+    class Container extends Component {
+      render() {
+        return <Passthrough {...this.props} />
+      }
+    }
+
+    TestRenderer.create(
+      <ProviderMock store={store}>
+        <div>
+          <Container name="a" />
+        </div>
+      </ProviderMock>
+    )
+
+    store.dispatch({ type: 'test' })
+    expect(initialOwnProps).toBe(undefined)
+    expect(initialState).not.toBe(undefined)
+    expect(secondaryOwnProps).not.toBe(undefined)
+    expect(secondaryOwnProps.name).toBe("a")
+  })
+
+  it('should allow providing a factory function to mapDispatchToProps', () => {
+    let updatedCount = 0
+    let memoizedReturnCount = 0
+    const store = createStore(() => ({ value: 1 }))
+
+    const mapDispatchFactory = () => {
+      let lastProp, lastResult
+      return (dispatch, props) => {
+        if (props.name === lastProp) {
+          memoizedReturnCount++
+          return lastResult
+        }
+        lastProp = props.name
+        return lastResult = { someObject: { dispatchFn: dispatch } }
+      }
+    }
+    function mergeParentDispatch(stateProps, dispatchProps, parentProps) {
+      return { ...stateProps, ...dispatchProps, name: parentProps.name }
+    }
+
+    @connect(null, mapDispatchFactory, mergeParentDispatch)
+    class Passthrough extends Component {
+      componentWillUpdate() {
+        updatedCount++
+      }
+      render() {
+        return <div />
+      }
+    }
+
+    class Container extends Component {
+      constructor(props) {
+        super(props)
+        this.state = { count: 0 }
+      }
+      componentDidMount() {
+        this.setState({ count: 1 })
+      }
+      render() {
+        const { count } = this.state
+        return (
+          <div>
+            <Passthrough count={count} name="a" />
+            <Passthrough count={count} name="b" />
+          </div>
+        )
+      }
+    }
+
+    TestRenderer.create(
+      <ProviderMock store={store}>
+        <Container />
+      </ProviderMock>
+    )
+
+    store.dispatch({ type: 'test' })
+    expect(updatedCount).toBe(0)
+    expect(memoizedReturnCount).toBe(2)
+  })
+
+  it('should not call update if mergeProps return value has not changed', () => {
+    let mapStateCalls = 0
+    let renderCalls = 0
+    const store = createStore(stringBuilder)
+
+    @connect(() => ({ a: ++mapStateCalls }), null, () => ({ changed: false }))
+    class Container extends Component {
+      render() {
+        renderCalls++
+        return <Passthrough {...this.props} />
+      }
+    }
+
+    TestRenderer.create(
+      <ProviderMock store={store}>
+        <Container />
+      </ProviderMock>
+    )
+
+    expect(renderCalls).toBe(1)
+    expect(mapStateCalls).toBe(1)
+
+    store.dispatch({ type: 'APPEND', body: 'a' })
+
+    expect(mapStateCalls).toBe(2)
+    expect(renderCalls).toBe(1)
+  })
+
+  it('should update impure components with custom mergeProps', () => {
+    let store = createStore(() => ({}))
+    let renderCount = 0
+
+    @connect(null, null, () => ({ a: 1 }), { pure: false })
+    class Container extends React.Component {
+      render() {
+        ++renderCount
+        return <div />
+      }
+    }
+
+    class Parent extends React.Component {
+      componentDidMount() {
+        this.forceUpdate()
+      }
+      render() {
+        return <Container />
+      }
+    }
+
+    TestRenderer.create(
+      <ProviderMock store={store}>
+        <Parent>
+          <Container />
+        </Parent>
+      </ProviderMock>
+    )
+
+    expect(renderCount).toBe(2)
+  })
+
+  it('should allow to clean up child state in parent componentWillUnmount', () => {
+    function reducer(state = { data: null }, action) {
+      switch (action.type) {
+        case 'fetch':
+          return { data: { profile: { name: 'April' } } }
+        case 'clean':
+          return { data: null }
+        default:
+          return state
+      }
+    }
+
+    @connect(null)
+    class Parent extends React.Component {
+      componentWillMount() {
+        this.props.dispatch({ type: 'fetch' })
+      }
+
+      componentWillUnmount() {
+        this.props.dispatch({ type: 'clean' })
+      }
+
+      render() {
+        return <Child name='child' />
+      }
+    }
+
+    @connect(state => ({
+      profile: state.data.profile
+    }))
+    class Child extends React.Component {
+      render() {
+        return null
+      }
+    }
+
+    const store = createStore(reducer)
+    const div = document.createElement('div')
+    ReactDOM.render(
+      <ProviderMock store={store}>
+        <Parent />
+      </ProviderMock>,
+      div
+    )
+
+    ReactDOM.unmountComponentAtNode(div)
+  })
 })
