@@ -38,6 +38,9 @@ function dealMapStateToProps(mapStateToProps) {
       return proxy;
     }
   }
+  return ()=>{
+    throw new Error(`InvalidMapState:Invalid value of ${typeof mapStateToProps} for mapStateToProps arguments`); //无效的mapStateToProps，抛出错误
+  }
 }
 
 export default dealMapStateToProps;
