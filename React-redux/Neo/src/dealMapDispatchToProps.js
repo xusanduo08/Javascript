@@ -43,6 +43,10 @@ function dealMapDispatchToProps(mapDispatchToProps) {
       return proxy;
     }
   }
+
+  return ()=>{
+    throw new Error(`InvalidMapDispatch:Invalid value of ${typeof mapDispatchToProps} for mapDispatchToProps arguments`); //无效的mapStateToProps，抛出错误
+  }
 }
 
 export default dealMapDispatchToProps;
