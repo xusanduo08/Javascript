@@ -5,20 +5,27 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-class Provider extends React.Component {
+//换了一种写法，是的Provider实例化时可以传入参数
+function createProvider(storeKey = 'store'){
+  const subscriptionKey = `${storeKey}Subscription`;
+  class Provider extends React.Component {
 
-  getChildContext() {
-    return {
-      store: this.props.store
+    getChildContext() {
+      return {
+        [storeKey]: this.props.store
+      }
+    }
+    render() {
+      return React.Children.only(this.props.children)
     }
   }
-  render() {
-    return React.Children.only(this.props.children)
+  
+  Provider.childContextTypes = {
+    [storeKey]: PropTypes.object
   }
+  return Provider;
 }
 
-Provider.childContextTypes = {
-  store: PropTypes.object
-}
 
-export default Provider;
+
+export default createProvider;
