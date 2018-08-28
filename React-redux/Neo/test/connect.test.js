@@ -5,6 +5,7 @@ import ReactDOM from 'react-dom'
 import TestRenderer from 'react-test-renderer'
 import { createStore } from 'redux'
 import connect from '../src/connect'
+import createProvider from '../src/Provider';
 
 describe('connect', () => {
   class Passthrough extends Component {
@@ -1994,4 +1995,161 @@ describe('connect', () => {
     expect(renderCount).toBe(rendersBeforeStateChange + 1)
   })
 
+  function renderWithBadConnect(Component) {
+    const store = createStore(() => ({}))
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {})
+
+    try {
+      TestRenderer.create(
+        <ProviderMock store={store}>
+          <Component pass="through" />
+        </ProviderMock>
+      )
+      return null
+    } catch (error) {
+      return error.message
+    } finally {
+      spy.mockRestore()
+    }
+  }
+
+  it('should throw a helpful error for invalid mapStateToProps arguments', () => {
+    @connect('invalid')
+    class InvalidMapState extends React.Component { render() { return <div></div> } }
+
+    const error = renderWithBadConnect(InvalidMapState)
+    expect(error).toContain('string')
+    expect(error).toContain('mapStateToProps')
+    expect(error).toContain('InvalidMapState')
+  })
+
+  it('should throw a helpful error for invalid mapDispatchToProps arguments', () => {
+    @connect(null, 'invalid')
+    class InvalidMapDispatch extends React.Component { render() { return <div></div> } }
+
+    const error = renderWithBadConnect(InvalidMapDispatch)
+    expect(error).toContain('string')
+    expect(error).toContain('mapDispatchToProps')
+    expect(error).toContain('InvalidMapDispatch')
+  })
+
+  it('should throw a helpful error for invalid mergeProps arguments', () => {
+    @connect(null, null, 'invalid')
+    class InvalidMerge extends React.Component { render() { return <div></div> } }
+
+    const error = renderWithBadConnect(InvalidMerge)
+    expect(error).toContain('string')
+    expect(error).toContain('mergeProps')
+    expect(error).toContain('InvalidMerge')
+  })
+
+  it('should notify nested components through a blocking component', () => {
+    @connect(state => ({ count: state }))
+    class Parent extends Component {
+      render() { return <BlockUpdates><Child /></BlockUpdates> }
+    }
+
+    class BlockUpdates extends Component {
+      shouldComponentUpdate() { return false; }
+      render() { return this.props.children; }
+    }
+
+    const mapStateToProps = jest.fn(state => ({ count: state }))
+    @connect(mapStateToProps)
+    class Child extends Component {
+      render() { return <div>{this.props.count}</div> }
+    }
+
+    const store = createStore((state = 0, action) => (action.type === 'INC' ? state + 1 : state))
+    TestRenderer.create(<ProviderMock store={store}><Parent /></ProviderMock>)
+
+    expect(mapStateToProps).toHaveBeenCalledTimes(1)
+    store.dispatch({ type: 'INC' })
+    expect(mapStateToProps).toHaveBeenCalledTimes(2)
+  })
+
+  it('should subscribe properly when a middle connected component does not subscribe', () => {
+
+    @connect(state => ({ count: state }))
+    class A extends React.Component { render() { return <B {...this.props} /> }}
+
+    @connect() // no mapStateToProps. therefore it should be transparent for subscriptions
+    class B extends React.Component { render() { return <C {...this.props} /> }}
+
+    @connect((state, props) => {
+      expect(props.count).toBe(state)
+      return { count: state * 10 + props.count }
+    })
+    class C extends React.Component { render() { return <div>{this.props.count}</div> }}
+
+    const store = createStore((state = 0, action) => (action.type === 'INC' ? state += 1 : state))
+    TestRenderer.create(<ProviderMock store={store}><A /></ProviderMock>)
+
+    store.dispatch({ type: 'INC' })
+  })
+
+  it('should subscribe properly when a new store is provided via props', () => {
+    const store1 = createStore((state = 0, action) => (action.type === 'INC' ? state + 1 : state))
+    const store2 = createStore((state = 0, action) => (action.type === 'INC' ? state + 1 : state))
+
+    @connect(state => ({ count: state }))
+    class A extends Component {
+      render() { return <B store={store2} /> }
+    }
+
+    const mapStateToPropsB = jest.fn(state => ({ count: state }))
+    @connect(mapStateToPropsB)
+    class B extends Component {
+      render() { return <C {...this.props} /> }
+    }
+
+    const mapStateToPropsC = jest.fn(state => ({ count: state }))
+    @connect(mapStateToPropsC)
+    class C extends Component {
+      render() { return <D /> }
+    }
+
+    const mapStateToPropsD = jest.fn(state => ({ count: state }))
+    @connect(mapStateToPropsD)
+    class D extends Component {
+      render() { return <div>{this.props.count}</div> }
+    }
+
+    TestRenderer.create(<ProviderMock store={store1}><A /></ProviderMock>)
+    expect(mapStateToPropsB).toHaveBeenCalledTimes(1)
+    expect(mapStateToPropsC).toHaveBeenCalledTimes(1)
+    expect(mapStateToPropsD).toHaveBeenCalledTimes(1)
+
+    store1.dispatch({ type: 'INC' })
+    expect(mapStateToPropsB).toHaveBeenCalledTimes(1)
+    expect(mapStateToPropsC).toHaveBeenCalledTimes(1)
+    expect(mapStateToPropsD).toHaveBeenCalledTimes(2)
+
+    store2.dispatch({ type: 'INC' })
+    expect(mapStateToPropsB).toHaveBeenCalledTimes(2)
+    expect(mapStateToPropsC).toHaveBeenCalledTimes(2)
+    expect(mapStateToPropsD).toHaveBeenCalledTimes(2)
+  })
+
+  it('should receive the store in the context using a custom store key', () => {
+    const store = createStore(() => ({}))
+    const CustomProvider = createProvider('customStoreKey')
+    const connectOptions = { storeKey: 'customStoreKey' }
+
+    @connect(undefined, undefined, undefined, connectOptions)
+    class Container extends Component {
+      render() {
+        return <Passthrough {...this.props} />
+      }
+    }
+
+    const testRenderer = TestRenderer.create(
+      <CustomProvider store={store}>
+        <Container />
+      </CustomProvider>
+    )
+
+    const container = testRenderer.root.findByType(Container)
+    expect(container.instance.store).toBe(store)
+  })
 })
