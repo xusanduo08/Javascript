@@ -9,7 +9,7 @@ function areStatesEqual(a, b) {
 }
 
 export default class Selector {
-  constructor(initMapStateToProps, initMapDispatchToProps, initMergeProps, store, {pure=true}) {
+  constructor(initMapStateToProps, initMapDispatchToProps, initMergeProps, store, { pure = true }) {
     this.mapDispatchToProps = initMapDispatchToProps();
     this.mapStateToProps = initMapStateToProps();
     this.initMergeProps = initMergeProps;
@@ -21,6 +21,7 @@ export default class Selector {
     this.stateProps = {}; //根据state计算出来的要传入组件的props值
     this.dispatchProps = {};
     this.pure = pure; // pure为true，将对根据state计算出来的props进行浅比较，避免不必要的更新，
+    this.error = null;
   }
 
   handleNewProps(nextOwnProps) {
@@ -74,7 +75,7 @@ export default class Selector {
       }
       if (propsChanged) {
         let nextProps = this.handleNewProps(nextOwnProps);
-        if(!shallowEqual(this.props, nextProps)){ // 加入浅比较，避免不必要的更新。
+        if (!shallowEqual(this.props, nextProps)) { // 加入浅比较，避免不必要的更新。
           this.props = nextProps;
         } else {
           this.shouldUpdate = false;
@@ -120,7 +121,7 @@ export default class Selector {
     }
   }
 
-  impureRun(nextOwnProps){
+  impureRun(nextOwnProps) {
     this.ownProps = nextOwnProps;
     this.ownState = this.store.getState();
     this.stateProps = this.mapStateToProps(this.ownState, this.ownProps);
@@ -130,10 +131,18 @@ export default class Selector {
   }
 
   run(nextOwnProps) {
-    if(this.pure){
-      this.pureRun(nextOwnProps)
-    } else {
-      this.impureRun(nextOwnProps)
+    // 这地方的错误处理目前用到的场景就是父组件在componentWillUnmount中dispatch了action
+    // 这个时候子组件在mapToProps计算时就会抛出错误，这地方捕捉到错误，并使程序继续运行下去。
+    try{
+      if (this.pure) {
+        this.pureRun(nextOwnProps)
+      } else {
+        this.impureRun(nextOwnProps)
+      }
+    } catch(e){
+      this.error = e;
+      this.shouldUpdate = true;
     }
+    
   }
 }

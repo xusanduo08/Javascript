@@ -43,7 +43,7 @@ function connect(
   const initMergeProps = dealMergeProps(mergeProps);
   const version = hotReloadingVersion++; //因为闭包，每个组件在渲染时都有自己的version，而且是逐个递增的。
   const shouldHandleStateChanges = Boolean(mapStateToProps); //如果mapStateToProps没有传递的话，则connect组件不会去订阅store的变化。而且这个参数不应暴露出来让用户输入
-  
+
   //每个connect组件都处在自己的闭包下，使用者上面声明的方法。
   return function (component) {
 
@@ -70,7 +70,7 @@ function connect(
       constructor(props, context) {
         super(props, context);
         this.store = props[storeKey] || context[storeKey]; //从props中或者上下文中获取store，由Provider将store放到上下文中
-        if(!this.store){
+        if (!this.store) {
           throw Error('Could not find "store"')
         }
         this.version = version;
@@ -98,7 +98,7 @@ function connect(
 
       componentDidMount() {
         if (!shouldHandleStateChanges) { return }
-        
+
         this.subscription.trySubscribe()
         this.selector.run(this.props);  // 考虑到如果组件在componentWillMount阶段调用dispatch发布action更改state，那么就需要重新计算状态和渲染
         if (this.selector.shouldUpdate) {
@@ -146,10 +146,11 @@ function connect(
         //但是我看代码，订阅函数的执行都是按照订阅顺序来的，如果在第二个订阅函数中卸载第一个订阅函数对应的组件，这个时候第一个组件的订阅函数应该运行完了才对啊，想不通
         this.subscription = null;
         this.notifyNestedSubs = function () { };
+        this.selector.shouldUpdate = false;
       }
 
       getWrappedInstance() { //获取被包裹组件实例的引用
-        if(!withRef){  // 获取被包裹组件实例需要传入withRef=true，否则报错
+        if (!withRef) {  // 获取被包裹组件实例需要传入withRef=true，否则报错
           throw Error('/To access the wrapped instance, you need to specify \{ withRef: true \} in the options argument of the connect\(\) call\./')
         }
         return this.wrappedInstance;
@@ -182,7 +183,12 @@ function connect(
 
       render() {
         this.selector.shouldUpdate = false;
-        return createElement(component, this.addExtraProps(this.selector.props));
+        if (this.selector.error) {
+          throw this.selector.error;
+        } else {
+          return createElement(component, this.addExtraProps(this.selector.props));
+        }
+        
       }
 
     }
@@ -202,22 +208,22 @@ function connect(
     // 我理解的热更新： connect组件的更新称为热更新
     //这种情况就要重新生成Connect组件的selector和初始化subscription
     if (process.env.NODE_ENV !== 'production') {
-      Connect.prototype.componentWillUpdate = function componentWillUpdate(){
-        
+      Connect.prototype.componentWillUpdate = function componentWillUpdate() {
+
         //想一下，为什么热更新后这地方的version会变？我们把热更新的组件叫target，新属性的来源对应的组件叫source
         //首先，热更新后，target的componentWillUpdate方法改变了，在这个方法内部，我们获取的version变量，是componentWillUpdate方法被定义时所在的作用域的变量
         //所以，热更新后，componentWillUpdate方法中拿到的version值就已经不是target所处闭包作用域中的version值了，而是source所处的闭包作用域的version值。
-        if(this.version !== version){
+        if (this.version !== version) {
           this.version = version; //  通过version判断是否是热更新的。
           this.initSelector();  //重新计算生成selector
           let oldListeners = [];
-          if(this.subscription){
+          if (this.subscription) {
             oldListeners = this.subscription.listener.get(); // 获取到内部子组件的订阅函数
             this.subscription.tryUnsubscribe(); //退订当前的订阅
           }
 
           this.initSubscription();  // 重新初始化订阅实例
-          if(shouldHandleStateChanges){
+          if (shouldHandleStateChanges) {
             this.subscription.trySubscribe(); // 重新订阅store
             //将热更新前Connect组件订阅实例中内包含的其他子connect组件的订阅函数放到现在热更新后新生成的订阅实例中
             oldListeners.forEach(listener => this.subscription.listener.subscribe(listener));
