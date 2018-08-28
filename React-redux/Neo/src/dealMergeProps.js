@@ -8,7 +8,8 @@ function dealMergeProps(mergeProps) {
     return function (stateProps, dispatchProps, ownProps){
       return { ...ownProps, ...stateProps, ...dispatchProps }
     }
-  } else {
+  } 
+  if(typeof mergeProps == 'function') {
     let hasRunOnce = false; // 是否已运行过一次 false 没有 true 有
     return function(stateProps, dispatchProps, ownProps){
       const nextMergedProps = mergeProps(stateProps, dispatchProps, ownProps)
@@ -26,7 +27,10 @@ function dealMergeProps(mergeProps) {
       
       return mergedProps;
     }
-  } 
+  }
+  return ()=>{
+    throw new Error(`InvalidMerge:Invalid value of ${typeof mergeProps} for mergeProps arguments`); //无效的mapStateToProps，抛出错误
+  }
 }
 
 export default dealMergeProps;
