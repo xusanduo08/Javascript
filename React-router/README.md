@@ -26,3 +26,18 @@ window.addEventListener('popstate', function(e){
 ```
 
 如果不是添加一条记录，而是替换当前记录，可以使用`replaceState`方法，也就是替换掉当前浏览器正在显示的那个页面的记录，其参数和`pushState`一样。
+
+
+
+#### location.reload(boolean)//刷新页面
+
+#### location.replace(url)//替换当前浏览器的最新一条记录，和replaceState方法效果一样。
+
+#### 
+
+```
+history.pushState(null, null, 'http://www.baidu.com')//这样写会报错，好像只允许相对地址
+location.assign('wwww');//要区分相对地址和绝对地址，新增记录
+location.href=url;//url要区分绝对地址和相对地址，新增记录。
+```
+
