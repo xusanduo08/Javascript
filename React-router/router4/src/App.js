@@ -21,7 +21,7 @@ class App extends Component {
             To get started, edit <code>src/App.js</code> and save to reload.
           </p>
             <Route path={`/child1/:id(\\d+)`}   component={Child1}></Route>
-            <Route path='/child' exact component={Child}></Route>
+            <Route path='/child' exact strict  component={Child}></Route>
             <Route path='/child' exact children={({match}) => {console.log(match);return null}}></Route>
         </div>
       </BrowserRouter>
