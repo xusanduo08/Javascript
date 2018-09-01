@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 import {BrowserRouter, Route, Switch, Redirect} from 'react-router-dom';
+import { Prompt } from 'react-router';
 import Child1 from './Child1';
 import Child2 from './Child2';
 import Child from './Child';
@@ -19,11 +20,9 @@ class App extends Component {
           <p className="App-intro">
             To get started, edit <code>src/App.js</code> and save to reload.
           </p>
-          <Switch>
             <Route path={`/child1/:id(\\d+)`}   component={Child1}></Route>
             <Route path='/child' exact component={Child}></Route>
-            <Redirect to='/child'></Redirect>
-          </Switch>
+            <Route path='/child' exact children={({match}) => {console.log(match);return null}}></Route>
         </div>
       </BrowserRouter>
     );
