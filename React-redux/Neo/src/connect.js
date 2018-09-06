@@ -44,7 +44,7 @@ function connect(
   const version = hotReloadingVersion++; //因为闭包，每个组件在渲染时都有自己的version，而且是逐个递增的。
   const shouldHandleStateChanges = Boolean(mapStateToProps); //如果mapStateToProps没有传递的话，则connect组件不会去订阅store的变化。而且这个参数不应暴露出来让用户输入
 
-  //每个connect组件都处在自己的闭包下，使用者上面声明的方法。
+  //每个connect组件都处在自己的闭包下，使用着上面声明的方法。
   return function (component) {
 
     if (!component) {
@@ -144,6 +144,13 @@ function connect(
         // 退订之后onStateChange应该就不会被调用了,所以这地方应该可以不用管run方法啊，为什么还要置空函数呢？
         this.selector.run = function () { }; // 主要考虑到dispatch一个action的同时组件正准备卸载，此时组件的onStateChange可能已经处于触发状态，为了避免不必要的计算，需要去把selector.run置成空函数
         //但是我看代码，订阅函数的执行都是按照订阅顺序来的，如果在第二个订阅函数中卸载第一个订阅函数对应的组件，这个时候第一个组件的订阅函数应该运行完了才对啊，想不通
+        /**
+         * The subscriptions are snapshotted just before every `dispatch()` call.
+        * If you subscribe or unsubscribe while the listeners are being invoked, this
+        * will not have any effect on the `dispatch()` that is currently in progress.
+        * However, the next `dispatch()` call, whether nested or not, will use a more
+        * recent snapshot of the subscription list.
+         * **/
         this.subscription = null;
         this.notifyNestedSubs = function () { };
         this.selector.shouldUpdate = false;
