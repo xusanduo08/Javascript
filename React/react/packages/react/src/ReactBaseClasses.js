@@ -17,6 +17,8 @@ if (__DEV__) {
 
 /**
  * Base class helpers for the updating state of a component.
+ * 基础类，原型上定义了setState、forceUpdate方法
+ * 每个实例具有自己的props、context、refs及updater属性
  */
 function Component(props, context, updater) {
   this.props = props;

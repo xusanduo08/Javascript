@@ -111,13 +111,13 @@ function defineRefPropWarningGetter(props, displayName) {
 const ReactElement = function(type, key, ref, self, source, owner, props) {
   const element = {
     // This tag allows us to uniquely identify this as a React Element
-    $$typeof: REACT_ELEMENT_TYPE,
+    $$typeof: REACT_ELEMENT_TYPE, // 组件的标识信息
 
     // Built-in properties that belong on the element
-    type: type,
-    key: key,
-    ref: ref,
-    props: props,
+    type: type, //类型，是一个原生DOM（字符串）还是另一个react组件类
+    key: key,  // DOM结构标识，提升update性能
+    ref: ref, //真实DOM引用
+    props: props,  //DOM属性相关信息，子节点也会作为children挂载到props下面
 
     // Record the component responsible for creating this element.
     _owner: owner,
@@ -254,6 +254,7 @@ export function createElement(type, config, children) {
 
 /**
  * Return a function that produces ReactElements of a given type.
+ * 返回一个能创建指定类型react元素的方法
  * See https://reactjs.org/docs/react-api.html#createfactory
  */
 export function createFactory(type) {
