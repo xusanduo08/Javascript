@@ -107,5 +107,5 @@ class BudgetContainer extends React.PureComponent {
 
 设想一下，如果设计师觉得这个组件需要移动位置，你不需要做任何的更改只需要把容器组件放到对应的位置，然后关心下容器内部数据的来源即可。唯一要做的就是在不同环境中编写不同的容器。
 
-（最后一点我觉得有点代码重用的意思，和性能优化的关系有一点，但不大。主要在于用容器来隔离外界的变化，怎么隔离呢，shouldComponentUpdate始终返回false么？但是容器自身也需要更新啊，所以这时候shouldComponentUpdate就变得有点复杂了啊）
+（最后一点我觉得有点代码重用的意思，和性能优化的关系有一点，但不大。主要在于用容器来隔离外界的变化，怎么隔离呢，shouldComponentUpdate始终返回false么？但是容器自身也需要更新啊，所以这时候shouldComponentUpdate不会那么简单。可以使用浅比较，所以要求容器的state不能太复杂，结构不能太深，以便于有变化发生时浅比较能够比较出变化来）
 
