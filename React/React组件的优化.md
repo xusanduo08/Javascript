@@ -109,3 +109,9 @@ class BudgetContainer extends React.PureComponent {
 
 （最后一点我觉得有点代码重用的意思，和性能优化的关系有一点，但不大。主要在于用容器来隔离外界的变化，怎么隔离呢，shouldComponentUpdate始终返回false么？但是容器自身也需要更新啊，所以这时候shouldComponentUpdate不会那么简单。可以使用浅比较，所以要求容器的state不能太复杂，结构不能太深，以便于有变化发生时浅比较能够比较出变化来）
 
+
+
+参考：
+
+http://taobaofed.org/blog/2016/08/12/optimized-react-components/
+
