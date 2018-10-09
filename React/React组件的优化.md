@@ -69,4 +69,43 @@ class Content extends React.Component{
 因为`<Content />`组件不需要更新，所以可以`<Content />`的`shouldComponentUpdate()`，使其一直返回false，这样`<Scroll />`组件的更新就不会连坐到内部`<Content />`组件。
 
 * 优化点四：使用短路逻辑或者样式控制组件的隐藏和显示
+
+要知道，null、undefined、Boolean值都可以作为react元素，所以可以使用null、undefined或者Boolean来占位。
+
+```jsx
+<Header>
+	{flag && <div>moon</div>}
+	<Nav>nav</Nav>
+<Header>
+```
+
+比如上面的一个简单的组件，当flag为true时，会展示moon文本；flag为false时，这段表达式返回的就是false，在虚拟DOM树中，false就会和之前的相同位置的节点比较，比较后因为元素类型不一样（一个是false，一个是div），div会被卸载，换成false。false不会真的去渲染，但是作为一个react元素，会占着一个位置。这个时候，因为false的占位，后面元素的位置不会受到影响，又因为diff算法进行的是同层同位置节点比较，剩下的元素的位置都没有改变，所以变化前后都是自己和自己比较，这种情况避免了组件卸载又挂载造成的资源浪费（顶多会进行更新）。
+
+同理，使用css控制元素的隐藏和显示也是一个道理，减少元素卸载再挂载造成的资源消耗。
+
 * 优化点五：容器组件和内容组件变化隔离
+
+通过容器来隔离外界的变化。容器是一个数据层，组件专门负责渲染，不进行任何数据交互，只根据得到的数据渲染响应的内容。
+
+```react
+class BudgetContainer extends React.PureComponent {
+    constructor(props) {
+        super(props);
+    }
+
+    computeState() {
+        return BudgetStore.getStore()
+    }
+
+    render() {
+        return <Budget {...this.state}/>
+    }
+}
+```
+
+容器不应该有props和children，这样就能够把自己和父组件进行隔离，不会因为外界因素去重新渲染，也没必要重新渲染。
+
+设想一下，如果设计师觉得这个组件需要移动位置，你不需要做任何的更改只需要把容器组件放到对应的位置，然后关心下容器内部数据的来源即可。唯一要做的就是在不同环境中编写不同的容器。
+
+（最后一点我觉得有点代码重用的意思，和性能优化的关系有一点，但不大。主要在于用容器来隔离外界的变化，怎么隔离呢，shouldComponentUpdate始终返回false么？但是容器自身也需要更新啊，所以这时候shouldComponentUpdate就变得有点复杂了啊）
+
