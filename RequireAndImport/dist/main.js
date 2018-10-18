@@ -90,11 +90,11 @@
 /*!****************!*\
   !*** ./es6.js ***!
   \****************/
-/*! exports provided: default */
+/*! exports provided: a */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\nlet A = {\r\n    a: \"A\"\r\n}\r\n/* harmony default export */ __webpack_exports__[\"default\"] = (A);\n\n//# sourceURL=webpack:///./es6.js?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, \"a\", function() { return A; });\nlet A = {\r\n    a: \"A\"\r\n}\r\n//export default A;\r\n \n\n//# sourceURL=webpack:///./es6.js?");
 
 /***/ }),
 
@@ -106,7 +106,11 @@ eval("__webpack_require__.r(__webpack_exports__);\nlet A = {\r\n    a: \"A\"\r\n
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony import */ var _es6__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./es6 */ \"./es6.js\");\n\r\n\r\nconsole.log(_es6__WEBPACK_IMPORTED_MODULE_0__[\"default\"])\r\nconsole.log(__webpack_require__(/*! ./es6 */ \"./es6.js\"));\n\n//# sourceURL=webpack:///./index.js?");
+__webpack_require__.r(__webpack_exports__);
+var _es6__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__( "./es6.js");\
+console.log(_es6__WEBPACK_IMPORTED_MODULE_0__["default"])
+console.log(__webpack_require__("./es6.js"));
+//# sourceURL=webpack:///./index.js?;
 
 /***/ })
 

@@ -1,0 +1,5 @@
+#### es6的模块和require
+
+es6的模块导入导出命令式import和export，而require是CommonJS规范下的模块导入方法，其对应的模块导出方法是使用module.exports
+
+在当前webpack和babel的帮助下，import和export，require和module.exports都可以在浏览器端使用

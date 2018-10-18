@@ -82,17 +82,22 @@
 			var A = {
 				a: "A"
 			}
-			__webpack_exports__["default"] = (A);//这地方为什么会挂载default属性下？
-			//# sourceURL=webpack:///./es6.js?;
+			__webpack_exports__["default"] = (A);
+            //这地方为什么会挂载在default属性下？因为代码里export时是通过export { A as default}这样导出去的
+            //也就是说，es6.js这个文件与外界的接口就是default
+            //本质上export default 就是将当前模块的东西放在default接口下，并把这个接口输出出去供外界使用
 		}),
 
 		"./index.js":
 			(function (module, __webpack_exports__, __webpack_require__) {
 				"use strict";
 				__webpack_require__.r(__webpack_exports__);
-				/* harmony import */
+				
 				var _es6__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./es6.js");
-				console.log(_es6__WEBPACK_IMPORTED_MODULE_0__["default"])//这地方为什么自动取了default属性？
+                console.log(_es6__WEBPACK_IMPORTED_MODULE_0__["default"])//这地方为什么自动取了default属性？
+                //在导入的时候是通过import { default as A } from 'xxx'这样方式导入的，default为es6.js与外界的接口，模块内的东西都放在default接口下
+                //所以，这地方就自动打印了es6.js模块的default属性来输出模块中的内容
+                //说白了，这地方的default和上面的default是一个东西，都是es6.js这个模块对外的接口，两者是一样的
 				//# sourceURL=webpack:///./index.js?;
 			})
 	});
