@@ -56,25 +56,61 @@ default exports：每个模块都可以设置一个默认导出值，使用 `exp
 export default function(){}
 
 //main.js
-import muFunc from './lib.js
+import myunc from './lib.js';// import { default as myFunc } from './lib.js'
+import youFunc from './lib.js';// import { default as youFunc } from './lib.js'
+import hisFunc from './lib.js';//
+// myFunc, youFunc, hisFunc代表的内容都一样
 ```
 
+`export default xxx`其实就是`export { xxx as default}`的一种简写形式。
 
+在使用import导入默认模块时，import后面跟着的变量名可以任意指定。原因在于，在导入默认模块时`import xxx from './lib.js'`其实就是`import { default as xxx} from './lib.js'`的简写。
 
-其中，A即为该模块对外的接口。export还有下面几种形式：
+还有很多基本用法这里就不说了，具体可以参考[这里](http://exploringjs.com/es6/ch_modules.html#sec_modules-in-javascript)，或者[这里](http://es6.ruanyifeng.com/#docs/module)
+
+##### import的使用必须放在当前文件的顶部,不能在条件语句和代码块中导入导出模块
+
+不能将import和export放在代码块和条件语句中使用：
 
 ```javascript
-export let a = 1;
-export function b(){};
-/***********或者******************/
-let a = 1;
-function b(){}
-export {a, b};
+if(xxx){
+    import 'foo' from 'xxx';
+    //或者
+    export default foo;
+}
+
+{
+    import 'foo' from 'xx'
+    //或者
+    export default foo
+}
+//以上都是错误写法
 ```
 
-上面两种形式在其他文件中导入时，均需要一下写法：
+##### import具有提升效果，会提升到整个模块顶部，首先执行。
 
 ```javascript
-import { a , b } from 'xxx'
+foo();
+import { foo } from 'xxx';
 ```
 
+上面的代码不会报错，因为import的执行早于foo的调用执行。__这种行为的本质是，`import`是编译阶段执行的命令，在代码运行之前。__
+
+##### import导入进来的是对其他模块的引用，是只读的
+
+import导入进来的是通过export导出来的模块的只读内容，当export所导出的内容在自身所在文件被修改了之后，已经导入这个模块的其他模块是能获取到这个最新的变化的。
+
+```javascript
+//lib.js
+export let counter = 3;
+export function incCounter(){
+    counter++;
+}
+
+//main.js
+import { counter, incCounter } from './lib.js'
+//The imported value 'counter' is live
+console.log(counter);//3
+incCounter();
+console.log(counter);//4
+```
