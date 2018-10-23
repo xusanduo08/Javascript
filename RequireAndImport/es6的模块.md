@@ -1,4 +1,4 @@
-#### es6的模块和node的require
+#### es6的模块
 
 ​	es6的模块导入导出命令式import和export，而require是CommonJS规范下的模块导入方法，其对应的模块导出方法是使用module.exports
 
@@ -68,6 +68,8 @@ import hisFunc from './lib.js';//
 
 还有很多基本用法这里就不说了，具体可以参考[这里](http://exploringjs.com/es6/ch_modules.html#sec_modules-in-javascript)，或者[这里](http://es6.ruanyifeng.com/#docs/module)
 
+
+
 ##### import的使用必须放在当前文件的顶部,不能在条件语句和代码块中导入导出模块
 
 不能将import和export放在代码块和条件语句中使用：
@@ -87,6 +89,8 @@ if(xxx){
 //以上都是错误写法
 ```
 
+
+
 ##### import具有提升效果，会提升到整个模块顶部，首先执行。
 
 ```javascript
@@ -94,11 +98,13 @@ foo();
 import { foo } from 'xxx';
 ```
 
-上面的代码不会报错，因为import的执行早于foo的调用执行。__这种行为的本质是，`import`是编译阶段执行的命令，在代码运行之前。__
+上面的代码不会报错，因为`import`的执行早于`foo`的调用执行。__这种行为的本质是，`import`是编译阶段执行的命令，在代码运行之前。__
+
+
 
 ##### import导入进来的是对其他模块的只读引用(注意，是引用)
 
-import导入进来的是通过export导出来的模块的只读引用，当export所导出的内容在自身所在文件被修改了之后，已经导入这个内容的其他模块是能获取到这个最新的变化的。
+`import`导入进来的是通过`export`导出来的模块的只读引用，当`export`所导出的内容在自身所在文件被修改了之后，已经导入这个内容的其他模块是能获取到这个最新的变化的。
 
 ```javascript
 //lib.js
@@ -118,7 +124,7 @@ console.log(counter);//4
 couter++；//报错，TypeError
 ```
 
-类似于`import x from 'foo'`这种导入方式生成的变量x，其效果其实和使用`const`命令声明一个x差不多，声明后都是不可以修改的；同理，如果导入的是一个对象，比如`import * as foo from 'foo'`，这个时候对象`foo`就是一个[frozen object](http://speakingjs.com/es5/ch17.html#freezing_objects).
+类似于`import x from 'foo'`这种导入方式生成的变量`x`，其效果其实和使用`const`命令声明一个`x`差不多，声明后都是不可以修改的；同理，如果导入的是一个对象，比如`import * as foo from 'foo'`，这个时候对象`foo`就是一个[frozen object](http://speakingjs.com/es5/ch17.html#freezing_objects)。
 
 当使用星号（*）导入一个模块时，同样需要遵守上面的规定：
 
@@ -131,7 +137,7 @@ console.log(lib.counter);//3
 lib.incCount();
 console.log(lib.counter);//4
 
-//The imported value can't be changed
+//The imported value can't be changed，导入值是不能直接修改的
 lib.counter++;//TypeError
 ```
 
@@ -148,9 +154,28 @@ obj.prop = 123;//可以这样操作，不会报错
 obj = {};//报错，这改变了obj指向的内存地址，不允许
 ```
 
+
+
+上面是`es6`的`module`具有的特性，对于`CommonJS`规范下的模块来说，`require`命令导入进来的是模块的拷贝，导入的值一旦导入完成就会被缓存，与原模块不就存在关系了，原模块有变化发生也不会影响到已经导入的值（除非清理缓存）。所以，`CommonJS`规范下导入模块所挂载的变量是可以随意修改的。
+
+```javascript
+//a.js
+var b = require('./b');
+console.log(b.bar());// bar
+b = 3;
+console.log(b);// 3
+
+//b.js
+exports.bar = function(){
+	console.log('bar');
+};
+```
+
+`a.js`中导入`b`模块，并将导入的值挂载在了变量`b`下，此时`a`模块中的变量`b`只是`b`模块的拷贝，`b`模块中再有任何变化都不会影响到`b`，同时，`b`的值可以任意修改。
+
 ##### 模块的循环加载
 
-__CommonJS对循环加载的处理__：
+__`CommonJS`对循环加载的处理__：
 
 ```javascript
 //a.js
@@ -216,6 +241,8 @@ in main, a.done=true, b.done=true
 
 这地方要注意的就是，__一旦出现某个模块被循环加载，就只输出已经执行的部分，还未执行的部分不会输出__。使用CommonJS规范导入的是对导出模块值的__复制__（意思是导出一个值之后，模块内部发生其他变化是不会影响到这个值的），并且只有在第一次加载时会去运行要加载的模块，然后导入的值会被缓存，之后再有导入则直接从缓存中读取。
 
+
+
 __es6 module对循环加载的处理__：
 
 es6支持循环加载，因为es6导入的是对模块的引用，只要在使用的时候确保这些引用能够取到值就可以。看代码：
@@ -257,3 +284,12 @@ bar
 ```
 
 当运行到`b.js`中ii行时，因为`foo`是指向`a.js`内部变量的一个引用，所以引擎就会去调用这个引用所指向的方法，而此时在`a.js`中，虽然`foo`方法还没有导出，但由于__函数声明式__的提升作用，`foo`已经有定义了，所以此时运行`foo()`不会报错。
+
+##### webpack对模块的支持
+
+目前webpack4自带支持`es6`、`CommonJS`和`AMD`模块功能，可以在不使用任何插件或者loader的情况下使用webpack编译上述几种模块。
+
+##### webpack是如何处理各种模块的
+
+暂时没找到webpack是如何编译各种模块的资料（手动摊手脸）
+
