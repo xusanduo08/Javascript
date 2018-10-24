@@ -1,12 +1,12 @@
 #### es6的模块
 
-​	es6的模块导入导出命令式import和export，而require是CommonJS规范下的模块导入方法，其对应的模块导出方法是使用module.exports
+​	es6的模块导入导出命令式`import`和`export`，而`require`是CommonJS规范下的模块导入方法，其对应的模块导出方法是使用`module.exports`。
 
-​	在当前webpack和babel的帮助下，import和export，require和module.exports都可以在浏览器端使用。
+​	在当前webpack和babel的帮助下，`import`和`export`，`require`和`module.exports`都可以在浏览器端使用。
 
 ##### 基本用法
 
-* export/import：export用于将一个模块的内容导出，import则用于将一个模块的内容导入，写法：
+* `export/import`：`export`用于将一个模块的内容导出，import则用于将一个模块的内容导入，写法：
 
 有两种导出方式：named exports和default exports
 
@@ -27,7 +27,7 @@ console.log(b);//{a:3}
 console.log(square(11));//121
 ```
 
-可以使用as关键字来改变模块对外界的接口：
+可以使用`as`关键字来改变模块对外界的接口：
 
 ```javascript
 //lib.js
@@ -291,5 +291,152 @@ bar
 
 ##### webpack是如何处理各种模块的
 
-暂时没找到webpack是如何编译各种模块的资料（手动摊手脸）
+webpack是一个打包工具，它的功能是识别出`import`和`export`等命令，并加载对应的模块。也就是说，webpack并不是把`import`和`export`换成另一种表述让浏览器去加载这些模块，而是根据代码中已经写好的`import`和`export`把相关的模块加载好并合并成一个文件然后让浏览器去加载并运行这个文件。
 
+我们来看`es6`里的模块被webpack编译后编程什么样了：
+
+```javascript
+//a.js
+let A = {
+    a: "A"
+}
+export {A as a}; 
+
+//index.js
+import { default as  A } from './es6'
+console.log(A)
+```
+
+打包后的文件如下：
+
+```javascript
+//编译后的内容为一个自执行函数，入参为一个对象，对象属性为各个模块的路径+文件名，属性值即为各模块的内容
+(function (modules) { // webpackBootstrap
+  var installedModules = {}; // 缓存加载的模块
+  
+  //用来加载模块的方法
+  function __webpack_require__(moduleId) {
+    // 检查模块是否已经缓存（是否已经加载过）
+    if (installedModules[moduleId]) {
+      return installedModules[moduleId].exports;
+    }
+    // 没有缓存的话创建一个模块，模块id即为要加载的模块的id，模块的exports属性用来挂载模块导出的内容，属性名为模块对外接口名
+    var module = installedModules[moduleId] = {
+      i: moduleId,
+      l: false,
+      exports: {}
+    };
+
+    // 运行模块id对应的模块函数加载模块
+    modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+
+    // 标识当前模块为已经加载
+    module.l = true;
+
+    // 返回module.exports
+    return module.exports;
+  }
+
+  // expose the modules object (__webpack_modules__)
+  __webpack_require__.m = modules;
+
+  // expose the module cache
+  __webpack_require__.c = installedModules;
+
+  // define getter function for harmony exports
+  // 定义获取模块的getter方法，模块内容就通过getter返回
+  __webpack_require__.d = function (exports, name, getter) {
+    if (!__webpack_require__.o(exports, name)) {
+      Object.defineProperty(exports, name, { enumerable: true, get: getter });
+    }
+  };
+
+  // define __esModule on exports
+  __webpack_require__.r = function (exports) {
+    if (typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+      Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+    }
+    Object.defineProperty(exports, '__esModule', { value: true });
+  };
+
+  // create a fake namespace object
+  // mode & 1: value is a module id, require it
+  // mode & 2: merge all properties of value into the ns
+  // mode & 4: return value when already ns object
+  // mode & 8|1: behave like require
+  __webpack_require__.t = function (value, mode) {
+    if (mode & 1) value = __webpack_require__(value);
+    if (mode & 8) return value;
+    if ((mode & 4) && typeof value === 'object' && value && value.__esModule) return value;
+    var ns = Object.create(null);
+    __webpack_require__.r(ns);
+    Object.defineProperty(ns, 'default', { enumerable: true, value: value });
+    if (mode & 2 && typeof value != 'string') for (var key in value) __webpack_require__.d(ns, key, function (key) { return value[key]; }.bind(null, key));
+    return ns;
+  };
+
+  // getDefaultExport function for compatibility with non-harmony modules
+  __webpack_require__.n = function (module) {
+    var getter = module && module.__esModule ?
+      function getDefault() { return module['default']; } :
+      function getModuleExports() { return module; };
+    __webpack_require__.d(getter, 'a', getter);
+    return getter;
+  };
+
+  // 定义Object.prototype.hasOwnProperty.call方法
+  __webpack_require__.o = function (object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
+
+  // __webpack_public_path__
+  __webpack_require__.p = "";
+
+  // 加载并返回入口模块
+  return __webpack_require__(__webpack_require__.s = "./index.js");
+})
+  ({
+    "./es6.js":
+      (function (module, __webpack_exports__, __webpack_require__) { //__webpack__exports即为上面临时创建的module，其exports属性用来装载导出的内容
+        "use strict";
+        __webpack_require__.r(__webpack_exports__); // 给模块打上 _esModule=true 属性
+        //定义getter方法，方法返回模块导出的内容，即对象A，
+        //而且由于在模块中导出内容是挂在接口a下的，所以getter方法为__webpack__exports__的a属性的方法
+        // 即  __webpack__exports__.a为模块导出的内容
+        __webpack_require__.d(__webpack_exports__, "a", function () { return A; });
+        let A = { a: "A" }
+      }),
+    "./index.js":
+      (function (module, __webpack_exports__, __webpack_require__) {
+        "use strict";
+        __webpack_require__.r(__webpack_exports__);
+       	// 加载es6.js模块
+        var _es6__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__("./es6.js");
+        //打印es6.js模块的内容，注意这地方打印的是a属性，这个a是es6.js模块对外的接口，如果es6.js使用export default 导出模块，那么这地方的a属性就会变成default属性
+        console.log(_es6__WEBPACK_IMPORTED_MODULE_0__["a"]);
+      })
+  });
+```
+
+可以看出：
+
+* webpack把各模块的内容作为属性值挂载在了以各模块所在文件路径为属性名的属性下面，且这些属性都放在`installedModules`这一对象下。
+* 只有在第一次加载这个模块的时候回去运行这个模块，之后的加载都会到`installedModules`对象下去取对应的模块内容。
+* 很明显可以看出上面`index.js`所加载的只是`es6.js`模块的引用，`es6.js`中对象`A`有任何变化都可以在`index.js`中获取到。
+* es6模块用的是严格模式-----`use strict`
+
+webpack对`require`的处理后面再补充，有一点要特别注意，如果使用`require`加载`export default`导出的模块，webpack不会自动解析`default`属性到对应的变量上。
+
+```javascript
+//a.js
+let a = 1;
+export default a;
+
+//index.js
+let requireA = require('./a.js');
+let importA = import ('./a.js');
+console.log(requireA);// {default: 1}
+console.log(importA);// 1
+```
+
+这个时候需要在webpack中使用一个插件`babel-plugin-add-module-exports`，这样在代码中使用`require`导入`export default`的内容就不需要手动去获取`default`属性内容了。
+
+先写这么多
