@@ -1,5 +1,11 @@
 module.exports = {
     mode:"development",
-    entry:'./index.js',
+    entry:{
+        index: './index.js'
+    },
+    output:{
+        filename:'[name].bundle.js',
+        chunkFilename:'[name].bundle.js'
+    }
    
 }
