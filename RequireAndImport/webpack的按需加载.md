@@ -6,3 +6,4 @@ webpack可以把项目代码打包成一个bundle.js，如果项目比较大的�
 
 > import()内部使用promise实现。因此在老的浏览器中使用的话要注意兼容。
 
+webpack编译后的文件中，通过动态创建script标签来实现动态加载代码的功能。
