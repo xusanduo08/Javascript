@@ -141,10 +141,50 @@ el.style.left = el.offsetLeft + 10 + "px";
 
 对编程者而言，减少回流和重排的副作用的另一个策略就是尽量少的去触发回流和重排，并尽量少的去获取元素样式（这样浏览器的优化策略就不会受到影响）。如何做：
 
-* 不要一个个的去变更样式。
+* 不要一个个的去变更样式。比较好且维护起来方便的方法是更改元素的类名而不是样式。但这仅对静态样式而言。对于动态样式，比较好的是去编辑`cssText`属性而不是去手动获取和编辑元素的样式。
+
+```javascript
+//
+var left = 10, top = 10;
+el.style.left = left + "px";
+el.style.top = top + "px";
+
+//better
+el.className += "theClassname";
+
+//当样式值需要动态计算时
+//better
+el.style.cssText += ";left:" + "px;top" + "px;";
+```
+
+* 离线并且批量的进行变更。
+  * 使用`documentFragement`承载变更
+  * 克隆要更新的节点，然后在副本上进行变更操作，最后将原始节点用这个副本更新掉。
+  * 使用`display:none`隐藏要更新的节点（一次回流，一次重绘），然后对节点进行更新，更新结束后在去掉隐藏样式使节点显示（再一次回流和重绘）。这种方式用两次回流和重绘避免了潜在的可能的多次的回流和重绘。
+* 不要频繁的去获取节点的computed style。如果需要节点的computed style，可以一次性获取全量样式，并存储到本地，接下来的计算从本地的存储中获取相关值。
+
+```javascript
+//不要这样做
+for(big; loop; here){
+    el.style.left = el.offsetLeft + 10 +"px";
+    el.style.top = el.offsetTop + 10 + "px"
+}
+
+// better
+var left = el.offsetLeft, top = el.offsetTop, esty = el.style;
+for(big; loop; here){
+    left += 10;
+    top += 10;
+    esty.left = left + "px";
+    esty.top = top + "px";
+}
+
+```
+
+* 总体而言，在更新节点时需要考虑渲染树及为了使你的变更生效而所需要的性能消耗。例如，body中有一个使用绝对定位的子元素，当在这个子元素上添加动画时并不会对其他节点产生太多影响，并且动画所涉及区域的其他节点只需要重绘而不需要回流。
 
 
 
 http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/
 
-https://juejin.im/entry/582f16fca22b9d006b7afd89ww
+https://juejin.im/entry/582f16fca22b9d006b7afd89
