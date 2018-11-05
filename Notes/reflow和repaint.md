@@ -183,6 +183,80 @@ for(big; loop; here){
 
 * 总体而言，在更新节点时需要考虑渲染树及为了使你的变更生效而所需要的性能消耗。例如，body中有一个使用绝对定位的子元素，当在这个子元素上添加动画时并不会对其他节点产生太多影响，并且动画所涉及区域的其他节点只需要重绘而不需要回流。
 
+##### 工具
+
+（这段介绍工具，不译）
+
+##### 实例
+
+使用工具来看一下仅重设样式（不涉及布局上的变化）和回流（涉及到布局）在重绘时有什么不一样。
+
+先定义要用到的变量
+
+```javascript
+var bodystyle = document.body.style;
+var computed;
+if (document.body.currentStyle) {
+  computed = document.body.currentStyle;
+} else {
+  computed = document.defaultView.getComputedStyle(document.body, '');
+}
+```
+
+首先，我们仅改变样式不涉及布局，并且在每次改变后获取一次样式值。
+
+```javascript
+bodystyle.color = 'red';
+tmp = computed.backgroundColor;
+bodystyle.color = 'white';
+tmp = computed.backgroundImage;
+bodystyle.color = 'green';
+tmp = computed.backgroundAttachment;
+```
+
+然后我们做相同的事情，只不过在所有样式改变后再去获取样式值
+
+```javascript
+bodystyle.color = 'yellow';
+bodystyle.color = 'pink';
+bodystyle.color = 'blue';
+ 
+tmp = computed.backgroundColor;
+tmp = computed.backgroundImage;
+tmp = computed.backgroundAttachment;
+```
+
+以上的代码运行在[这个](http://www.phpied.com/files/reflow/restyle.html)页面（点击dude），我们暂时称这个测试为_样式重设测试_。第一次点击运行的是第一段代码，第二次点击运行第二段代码。
+
+（原文是在火狐上做的测试，译者直接在chrome上测试了，一下内容为译者所写）
+
+第一段代码：
+
+（chrome的performance不会看。。。。）
+
+##### 总结
+
+* 渲染树-----DOM树的可见部分
+* 渲染树中的节点称为frames或者boxes
+* 重新计算渲染树的布局称为在火狐中称为回流，在其他浏览器中称为重排
+* 根据渲染树重新计算的结果去渲染页面称为重绘
+
+##### 扩展阅读
+
+- Mozilla: [notes on reflow](http://www.mozilla.org/newlayout/doc/reflow.html)
+- David Baron of Mozilla: Google tech talk on [Layout Engine Internals for Web Developers](http://www.youtube.com/watch?v=a2_6bGNZ7bA)
+- WebKit: [rendering basics](http://webkit.org/blog/114/webcore-rendering-i-the-basics/) - 6-part series of posts
+- Opera: [repaints and reflows](http://dev.opera.com/articles/view/efficient-javascript/?page=3#reflow) is a part of an article on efficient JavaScript
+- Dynatrace: [IE rendering behavior](http://blog.dynatrace.com/2009/12/12/understanding-internet-explorer-rendering-behaviour/)
+
+
+
+https://zhuanlan.zhihu.com/p/29879682
+
+
+
+
+
 
 
 http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/
