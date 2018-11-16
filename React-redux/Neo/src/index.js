@@ -4,9 +4,18 @@ import ReactDOM from 'react-dom';
 import { createStore } from 'redux';
 import todo from './reducer.js';
 //import connect from '../src/connect';
-import {connect} from 'react-redux';
+import { connect } from 'react-redux';
 
-//用来测试Connect1中含有子组件Connect2的情况
+function reducer(state = { data: null }, action) {
+  switch (action.type) {
+    case 'fetch':
+      return { data: { profile: { name: 'April' } } }
+    case 'clean':
+      return { data: null }
+    default:
+      return state
+  }
+}
 
 class ProviderMock extends Component {
   getChildContext() {
@@ -21,89 +30,49 @@ ProviderMock.childContextTypes = {
   store: PropTypes.object.isRequired
 }
 
-
-const store = createStore(() => {
-  return {}
-})
-let mapStateToPropsCalls = 0
-
-let linkA, linkB
-
-let App = ({ children, setLocation }) => {
-  const onClick = to => event => {
-    event.preventDefault()
-    setLocation(to)
-  }
-  /* eslint-disable react/jsx-no-bind */
-  return (
-    <div>
-      <a href="#" onClick={onClick('a')} ref={c => { linkA = c }}>A</a>
-      <a href="#" onClick={onClick('b')} ref={c => { linkB = c }}>B</a>
-      {children}
-    </div>
-  )
-  /* eslint-enable react/jsx-no-bind */
-}
-App = connect(() => ({}))(App)
-
-
-class A extends Component{
-  componentWillUnmount(){
-    console.log(33)
-  }
-  componentDidMount(){
-    
-  }
-  render(){
-    return (<h1>A</h1>)
-  }
-}
-A = connect(() => {
-  console.log(++mapStateToPropsCalls)
-  return { calls: mapStateToPropsCalls }
-})(A)
-
-
-const B = () => (<h1>B</h1>)
-
-
-class RouterMock extends React.Component {
-  constructor(...args) {
-    super(...args)
-    this.state = { location: { pathname: 'a' } }
-    this.setLocation = this.setLocation.bind(this)
+class Parent extends React.Component {
+  componentWillMount() {
+    this.props.dispatch({ type: 'fetch' })
   }
 
-  setLocation(pathname) {
-    this.setState({ location: { pathname } })
-    store.dispatch({ type: 'TEST' })
+  componentWillUnmount() {
+    this.props.dispatch({ type: 'clean' })
   }
 
-  getChildComponent(location) {
-    switch (location) {
-      case 'a': return <A />
-      case 'b': return <B />
-      default: throw new Error('Unknown location: ' + location)
-    }
+  removeDOM(){
+    ReactDOM.unmountComponentAtNode(div)
   }
 
   render() {
-    return (<App setLocation={this.setLocation} name='app'>
-      {this.getChildComponent(this.state.location.pathname)}
-    </App>)
+    return (
+      <div>
+        <button onClick={this.removeDOM}>Click======</button>
+        <Child name='child' />
+      </div>
+    )
+    
+  }
+}
+Parent = connect(null)(Parent);
+
+
+class Child extends React.Component {
+  render() {
+    return <div>Child</div>
   }
 }
 
+Child = connect(state => ({
+  profile: state.data.profile
+}))(Child)
 
+const store = createStore(reducer)
 const div = document.createElement('div')
 document.body.appendChild(div)
 ReactDOM.render(
-  (<ProviderMock store={store}>
-    <RouterMock />
-  </ProviderMock>),
+  <ProviderMock store={store}>
+    <Parent />
+  </ProviderMock>,
   div
 )
-// linkA.click()
-// linkB.click()
-// linkB.click()
-//document.body.removeChild(div)
+

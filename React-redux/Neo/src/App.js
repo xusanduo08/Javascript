@@ -1,5 +1,6 @@
 import React from 'react';
 import connect from './connect.js';
+import FunctionalComponent from './FunctionalComponent';
 
 class App extends React.Component {
 
@@ -10,6 +11,8 @@ class App extends React.Component {
         {this.props.todos.length}
         <br />
         渲染次数：{this.props.renderCounts}
+
+        <FunctionalComponent></FunctionalComponent>
       </div>
     )
   }
