@@ -8,7 +8,7 @@
 
 ##### 揭示模式
 
-​	在目前常用的一些模块系统被使用之前，揭示模式一直流行于javascript编码中。揭示模式是在模块模式上的改进，它能返回定义和获取一个私有作用域内变量的方法。
+在目前常用的一些模块系统被使用之前，揭示模式一直流行于javascript编码中。揭示模式是在模块模式上的改进，它能返回定义和获取一个私有作用域内变量的方法。
 
 ```javascript
 var myRevealingModule = (function () {
@@ -39,7 +39,7 @@ var myRevealingModule = (function () {
 myRevealingModule.setName( "Paul Kinlan" );
 ```
 
-​	javascript的作用域在es6之前都是通过函数区分的。也就是说，定义在函数内部的变量在函数外部是无法获取到的。揭示模式的实现也是依赖于js的函数级作用域。
+javascript的作用域在es6之前都是通过函数区分的。也就是说，定义在函数内部的变量在函数外部是无法获取到的。揭示模式的实现也是依赖于js的函数级作用域。
 
 在上面代码中，公共方法都已经暴露出来，其他的一些变量作为保护都被包裹在函数级作用域内部。这种模式比较好的封装了代码，但是关于依赖并没有涉及到。对于一个完整的模块系统来讲，依赖肯定是要有的。
 
@@ -58,7 +58,7 @@ myRevealingModule.setName( "Paul Kinlan" );
 
 ##### CommonJS
 
-`CommonJS`本意是定义一系列规范以协议服务端`javascript`的开发。`CommonJS`设计到的其中一想规范就是模块化。`Node.js`的开发者起初在设计`Node.js`的模块时遵循的就是`CommonJS`的规范，但后来决定放弃该规范。但是目前`Node.js`中的模块依然和`CommonJS`所规范的很相像。
+`CommonJS`本意是定义一系列规范以协助服务端`javascript`的开发。`CommonJS`涉及到的其中一想规范就是模块化。`Node.js`的开发者起初在设计`Node.js`的模块时遵循的就是`CommonJS`的规范，但后来决定放弃该规范。但是目前`Node.js`中的模块依然和`CommonJS`所规范的很相像。
 
 ```javascript
 // In circle.js
@@ -77,11 +77,11 @@ console.log( `The area of a circle of radius 4 is ${circle.area(4)}`);
 
 在`Node.js`的模块顶层有一些抽象和`CommonJS`的还是很类似的。
 
-在`Node.js`和`CommonJS`中都是用`require`和`exports`来导入和导出模块。`require`用来导入其他模块到当前的模块中，`require`方法的参数为要导入的模块的`id`。在`NodeJS`中，`node_modules`目录下的模块用`require`来导入，模块名即为入参（如果是其他目录下的则传入路径）。`exports`是一个比较特殊的对象，其上的任何属性都被作为公开属性而被导出，而`exports`所在模块作用域内的其他东西依然被隐藏在作用域内部。`Node.js`和`CommonJS`在模块的实现上的一个比较突出的不同在于module.exports上。在Node中，真正用来导出数据的是`module.exports`对象，而`exports`只不过是`module.exports`的一个引用。但是在`CommonJS`中，则不存在`module.exports`对象。在Node中如果不使用`module.exports`则无法导出模块：
+在`Node.js`和`CommonJS`中都是用`require`和`exports`来导入和导出模块。`require`用来导入其他模块到当前的模块中，`require`方法的参数为要导入的模块的`id`。在`NodeJS`中，`node_modules`目录下的模块用`require`来导入，模块名即为入参（如果是其他目录下的则传入路径）。`exports`是一个比较特殊的对象，其上的任何属性都被作为公开属性而被导出，而`exports`所在模块作用域内的其他东西依然被隐藏在作用域内部。`Node.js`和`CommonJS`在模块实现上的一个比较突出的不同在于module.exports上。在Node中，真正用来导出数据的是`module.exports`对象，而`exports`只不过是`module.exports`的一个引用。在`CommonJS`中，则不存在`module.exports`对象。在Node中如果不使用`module.exports`则无法导出模块：
 
 ```javascript
 // 对exports的直接赋值导致exports与module.exports失去联系
-// 这将是的无法将这个匿名函数导出这个模块
+// 这使得无法将这个匿名函数导出这个模块
 exports =  (width) => {
   return {
     area: () => width * width
@@ -158,7 +158,7 @@ define(function (require) {
 
 * 语法上有些复杂
 * 无法直接使用，需要编译或者其他工具库协助
-* 对静态代码解析器来说比较难进行解析
+* 无法静态解析
 
 ##### `es6`的模块
 
