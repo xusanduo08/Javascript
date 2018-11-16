@@ -39,8 +39,30 @@ ReactDOM.render(<Component data={mydata} />, container);
 
 对于React来讲，它不知道数据有没有发生改变。而组件需要知道新的`props`（即使`props`的值实际没有改变），所以这个时候React需要调用`componentWillReceiveProps`方法。
 
-因为`mydata`作为数据有多种可能，纯对象、函数、或者是指向一个闭包内部变量的引用，又或者是一个指向在父类render期间无法实例化的对象，基于这些原因，React没法轻易的判断出`props`是否发生了改变为了能比较前后`props`的变更以及能基于`props`情况做一些指定的动作，React会调用`componentWillReceiveProps`。
+因为`mydata`作为数据有多种可能，纯对象、函数、或者是指向一个闭包内部变量的引用，又或者是一个指向在父类render期间无法实例化的对象，基于这些原因，React没法轻易的判断出`props`是否发生了改变。为了能比较前后`props`的变更以及能基于`props`情况做一些指定的动作，React会调用`componentWillReceiveProps`。
 
 在`componentWillReceiveProps`内部，我们可以获取到新的props，更新组件内部的state。如果我们有一个`state`是基于`props`的计算结果，那么我们把计算逻辑以及`this.setState()`放在这个函数内部调用是安全的，__在这个函数内部调用`this.setState()`不会另外触发render动作__。
+
+> `willReceiveProps`中的`setState`依然不是同步的。
+>
+> ```javascript
+> class App extends React.Component{
+>     state={count:0};
+>     componentWillReceiveProps(){
+>         this.setState({count: this.state.count + 1});
+>         console.log(this.state.count);
+>         this.setState({count: this.state.count + 1});
+>         console.log(this.state.count);
+>      }
+>     shouldComponentUpdate(){
+>         console.log(this.state.count);
+>         return true;
+>     }
+> }
+> //上面的组件在第一次接收到props后，两个打印语句均打印出0，说明这里的setState也不是同步更改的
+> //在shouldComponentUpdate运行之前，receiveProps中的setState已经执行了。
+> ```
+>
+> 只不过要注意的是，`receiveProps`里的`setState`不会再触发render过程，因为`receiveProps`之后就是`shouldComponentUpdate`（这个时候`receiveProps`中的`setState`已经执行完了），如果返回true，接下来就是render了。
 
 在组件挂载时，`componentWillReceiveProps`不会被调用。只有当组件的props可能更新时会被调用。此外，`this.setState()`不会引起`componentWillReceiveProps`的执行。换句话说，因为`state`改变而触发的update是会跳过`componentWillReceiveProps`的。
