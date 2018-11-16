@@ -41,6 +41,6 @@ ReactDOM.render(<Component data={mydata} />, container);
 
 因为`mydata`作为数据有多种可能，纯对象、函数、或者是指向一个闭包内部变量的引用，又或者是一个指向在父类render期间无法实例化的对象，基于这些原因，React没法轻易的判断出`props`是否发生了改变为了能比较前后`props`的变更以及能基于`props`情况做一些指定的动作，React会调用`componentWillReceiveProps`。
 
-在`componentWillReceiveProps`内部，我们可以获取到新的props，更新组件内部的state。如果我们有一个`state`是基于`props`的计算结果，那么我们把计算逻辑以及`this.setState()`放在这个函数内部调用是安全的，在这个函数内部调用`this.setState()`不会另外触发render动作。
+在`componentWillReceiveProps`内部，我们可以获取到新的props，更新组件内部的state。如果我们有一个`state`是基于`props`的计算结果，那么我们把计算逻辑以及`this.setState()`放在这个函数内部调用是安全的，__在这个函数内部调用`this.setState()`不会另外触发render动作__。
 
 在组件挂载时，`componentWillReceiveProps`不会被调用。只有当组件的props可能更新时会被调用。此外，`this.setState()`不会引起`componentWillReceiveProps`的执行。换句话说，因为`state`改变而触发的update是会跳过`componentWillReceiveProps`的。
