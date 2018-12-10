@@ -39,7 +39,7 @@ var myRevealingModule = (function () {
 myRevealingModule.setName( "Paul Kinlan" );
 ```
 
-javascript的作用域在es6之前都是通过函数区分的。也就是说，定义在函数内部的变量在函数外部是无法获取到的。揭示模式的实现也是依赖于js的函数级作用域。
+javascript的作用域在es6之前都是通过函数区分的。也就是说，定义在函数内部的变量在函数外部是无法获取到的。揭示模式的实现也依赖于js的函数级作用域。
 
 在上面代码中，公共方法都已经暴露出来，其他的一些变量作为保护都被包裹在函数级作用域内部。这种模式比较好的封装了代码，但是关于依赖并没有涉及到。对于一个完整的模块系统来讲，依赖肯定是要有的。
 
@@ -58,7 +58,7 @@ javascript的作用域在es6之前都是通过函数区分的。也就是说，�
 
 ##### CommonJS
 
-`CommonJS`本意是定义一系列规范以协助服务端`javascript`的开发。`CommonJS`涉及到的其中一想规范就是模块化。`Node.js`的开发者起初在设计`Node.js`的模块时遵循的就是`CommonJS`的规范，但后来决定放弃该规范。但是目前`Node.js`中的模块依然和`CommonJS`所规范的很相像。
+`CommonJS`本意是定义一系列规范以协助服务端`javascript`的开发。`CommonJS`涉及到的其中一项规范就是模块化。`Node.js`的开发者起初在设计`Node.js`的模块时遵循的就是`CommonJS`的规范，但后来决定放弃该规范。但是目前`Node.js`中的模块依然和`CommonJS`所规范的很相像。
 
 ```javascript
 // In circle.js
