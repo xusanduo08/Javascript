@@ -1,0 +1,21 @@
+{
+  "env": {
+    "jest": true
+  },
+  "rules":{
+    "no-unreachable": [2],
+    "indent": [2, 2, { "SwitchCase": 1 }],
+    "quotes": [2, "single"],
+    "max-statements": [2, 100],
+    "max-len": [2, 120],
+    "multiline-ternary": [0],
+    "no-const-assign": [2],
+    "no-return-assign": [0],
+    "no-var": [2],
+    "no-inner-declarations": [2],
+    "no-lonely-if": [2],
+    "no-tabs":[2],
+    "no-undef":[2],
+    "comma-dangle":[2]
+}
+}

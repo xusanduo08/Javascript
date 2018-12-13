@@ -1,0 +1,19 @@
+1.只要父组件共享了context，任意层级的子组件都可以获取到这个context，并能进行修改，所以说是不安全的，那为什么redux还要使用context，它又如何解决安全问题的？
+
+>redux含有store的context只能在connect组件中获取到，程序员自己写的被connect包裹的组件是接触不到含有store的context的，这样就不会出现context被随意修改的问题
+
+2.context的使用有个问题：在react中，如果父组件的shouldComponentUpdate返回false，那么子组件时获取不到最新的context的，redux是怎么处理这个问题的？
+
+> 1.我觉得可以将组件嵌套完毕后再进行connect处理，这样程序在处理的时候相对简单一些。而且目前没看到一个connect返回的组件嵌套另一个connect返回组件的情况。
+>
+> 2.redux中store是放在Provider的上下文中的，是最顶层的上下文。connect返回的组件的重新render靠的是订阅了store的变化（store.subscribe），只要store有了变化，所有订阅的组件都会有重新render的动作（至于最后是否render成功那就要视组件情况而定了），所以不存在上面说的这个问题。
+
+3.redux中，一个变化就要编写对应的action，reducer等，不能通通快快的写业务
+
+4.redux可以理解为一个发布订阅系统----各组件订阅store，组件可以发布action引起store的变化，然后store就会把变化发布到订阅过的组件上。
+
+5.redux要求：
+
+* 用简单的对象和数组描述应用的状态
+* 用简单的对象描述应用中的变更
+* 用纯函数来描述处理变更的逻辑
