@@ -58,7 +58,7 @@ The `EventPluginHub` then dispatches the events.
 
 
 
-事件不一定非要注册在window.document上，如果容器时iframe，那么事件就会注册到iframe上；又或者容器是一个document fragement，一个shadow DOM，都可以用来注册顶层的事件。
+事件不一定非要注册在window.document上，如果容器是iframe，那么事件就会注册到iframe上；又或者容器是一个document fragement，一个shadow DOM，都可以用来注册顶层的事件。
 
 React在分发事件的时候和原生事件一样，也有两个阶段：捕获阶段，冒泡阶段。
 
