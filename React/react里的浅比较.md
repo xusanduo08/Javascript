@@ -1,6 +1,6 @@
 #### react里的浅比较
 
-​	react的PureComponent类的shouldCOmponentUpdate方法使用了浅比较来判断props和state是否发生变化，一些组件可以通过继承PureComponent来优化组件性能，减少不必要的re-render。但是有些组件即使继承了PureComponent也没有任何性能上的改变。我们来看看浅比较的原理。
+​	react的PureComponent类的shouldComponentUpdate方法使用了浅比较来判断props和state是否发生变化，一些组件可以通过继承PureComponent来优化组件性能，减少不必要的re-render。但是有些组件即使继承了PureComponent也没有任何性能上的改变。我们来看看浅比较的原理。
 
 ```javascript
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -38,7 +38,7 @@ Object.is(-0, +0);//false
 
 以上情况在比较的时候就会返回true。可以看出，`Object.is()`方法弥补了`==`和`===`比较的缺陷。
 
-​	下面逐步解读一下`shallowEqual`方法
+下面逐步解读一下`shallowEqual`方法。
 
 ```javascript
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -61,9 +61,9 @@ function shallowEqual(objA: mixed, objB: mixed): boolean {
     return true;
   }
   /*
-  	如果不相等，那么就要看下两参数是否是对象，因为浅比较会进入到对象的第一层，不能仅引用不一样就
-  	直接返回false了。
-  	此外，如果两者有一个参数为null，那也不用继续下去了，两者已经不相等了，并且至少有一个为null，则
+  	如果不相等，那么就要看下两参数是否是对象（Object.is只能对基本类型数据做比较精准的比较）。
+  	浅比较需要进入到对象的第一层，不能仅引用不一样就直接返回false。
+  	此外，如果两者有一个参数为null，那也不用继续下去了，两者已经不相等了，并且有一个为null，则
   	表示肯定有变化发生了，shallowEqual可以直接返回false
   */
   if (
@@ -75,7 +75,7 @@ function shallowEqual(objA: mixed, objB: mixed): boolean {
     return false;
   }
   //如果是对象，同时两者又没有null，则开始进入到对象的第一层来比较
-  //获取两个对象的key值数组
+  //获取两个对象的key值组成数组
   const keysA = Object.keys(objA);
   const keysB = Object.keys(objB);
   //如果属性长度都不一样，则表示两者不相等，返回false
@@ -98,6 +98,6 @@ function shallowEqual(objA: mixed, objB: mixed): boolean {
 }
 ```
 
-​	通过上面的代码的可以看出（尤其最后一段），所谓浅比较只会进入到对象的第一层，如果对象的属性值仍然是对象，这时候是不会递归进入到属性内部去比较的，如果属性值前后指向的是不同的引用，即使引用对象的内部属性值都是一样，shallowEqual返回的结果仍会是false。如果想此时仍能使用PureComponent达到性能优化的结果，则必须保证属性所指向的都是同一个引用。
+​	通过上面的代码的可以看出（尤其最后一段），当传入参数是对象时__浅比较只会进入到对象的第一层__，如果参数对象的属性值仍然是对象，这时候是不会递归进入到属性值内部去比较的；如果参数对象前后指向的是不同的引用，即使引用所指向对象的内部属性值都是一样，shallowEqual返回的结果仍会是false。如果想此时仍能使用PureComponent达到性能优化的结果，则必须保证传入参数所指向的都是同一个引用。
 
 ​	综上，PureComponent有性能优化的功能，前提是组件接收的props或者组件内部的state结构比较简单。如果props或者state嵌套比较深（有两层及以上的嵌套），则可能就没法通过shallowEqual比较出变化，这也是有些组件使用了PureComponent后没有发现有任何性能上的优化的原因。
