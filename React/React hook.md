@@ -28,7 +28,123 @@ React本身并没有现成的方法来使得组件之间实现逻辑复用。现
 
 React hook的出现并不会改变现有开发者对React的一些理解，而且React也并没有计划去移除class。
 
+##### 什么是hook
+
+hook，从字面理解有“钩子”的含义。放在这里我们可以理解为，hook犹如一个钩子一样----通过hook，我们能进入到React内部，使用React的一些特性。
+
+hook能让你在不使用class组件时正常使用state、生命周期、context以及其他class组件才能用的一些React特性。
+
 下面开始看hook的使用。
 
 ##### State Hook
+
+当我们使用function定义组件时，我们可以这么在组件中使用状态：
+
+```javascript
+import { useState } from 'react';
+
+function Example(){
+    const [count, setCount] = useState(0);
+    
+    return (
+    	<div>
+    		<p>You clicked {count} time</p>
+    		<button onClick={() => setCount(count+1)}>
+    			Click me
+    		</button>
+    	</div>
+    );
+}
+```
+
+这里，`useState`就是一个Hook。在上面的例子中，我们在function组件内部调用了`useState`来给组件增加状态，在re-render的时，React会去获取当前的state值并进行相应的渲染。`useState`方法会返回当前的state值以及设置状态值的方法，这个方法和`class`组件中的`this.setState`有些类似，有一个不同点就是它不会将新旧state进行合并（merge）。
+
+`useState`只有一个参数，是状态的初始值。在上面的例子中，0就是初始状态值。这里有个地方要提一下，class组件中`this.state`往往指向的是一个对象，而这地方使用`useState`创建的state则不必是对象。`useState`中传入的初始值会在组件第一次渲染时被用到。
+
+在一个组件中我们可以多次调用同一个hook：
+
+```javascript
+function ExampleWithManyStates(){
+    const [age, setAge] = useState(42);
+    const [fruit, setFruit] = useState('banana');
+    const [todos, setTodos] = useState({text: 'Learn Hooks'});
+}
+```
+
+数组的解构赋值使得我们可以给我们需要的state定义不同的变量名。
+
+##### Effect Hook
+
+有时候我们在组件中会去请求数据、订阅某些信息、或者去变更DOM，我们把这些操作统一称为“副作用”（side effects）。这些行为都有可能会对组件的渲染造成影响，同时在组件渲染时这些行为又不会立刻完成。
+
+针对副作用有个专门的hook，叫`useEffect`，通过`useEffect`可以在function组件中很方便的添加副作用。它的触发时机和class组件中`componentDidMount`、`componentDidUpdate`以及`componentWillMount`几个生命周期的触发时机一致。
+
+下面的组件在每次更新后都会重新设置document title：
+
+```jsx
+import { useState, useEffect } from 'react';
+
+function Example(){
+    const [count, setCount] = useState(0);
+    
+    // 触发时机和componentDidMount、componentDidUpdate一致
+    useEffect(() => {
+        document.title == `You clicked ${count} times`;
+    });
+    
+    return (
+    	<div>
+    		<p>You clicked {count} times</p>
+    		<button onClick={()=>setCount(count+1)}>
+    			Click me
+    		</button>
+    	</div>
+    )
+}
+```
+
+调用`useEffect`其实也就是在告诉React当变更实施到DOM上之后要调用这些副作用。
+
+`useState`也可以返回一个函数，这个函数可以用来“清除”副作用：
+
+```javascript
+import {useState, useEffect} from 'react';
+
+function FriendStatus(props){
+    const [isOnline, setIsOnline] = useState(null);
+    
+    function handleStatusChange (status){
+        setIsOnline(status.isOnline);
+    }
+    
+    useEffect(() => {
+    	// 订阅
+        ChatAPI.subscribeToFriendStatus(props.friend.id, handleStatusChange);
+        // 返回的函数用来取消订阅
+        return () => {
+            ChatAPI.unsubscribeFromFriendStatus(props.friend.id, handleStatusChange);
+        };
+    });
+    
+    if(isOnline === null){
+        return 'Loading...'
+    }
+    return isOnline ? 'Online' : 'Offline';
+}
+```
+
+在上面的例子中，React会在组件卸载的时候去取消对`ChatAPI`的订阅。
+
+在组件中可以多次调用`useEffect`，这点和`useState`一样。
+
+##### Rules of Hooks
+
+Hook使用起来就是普通的函数，有两条引用规则：
+
+* 在组件头部调用hook，不要在循环语句、条件语句或者嵌套函数中调用。
+* 只能在React的function组件中调用hook，在一般的函数中不要调用。（在自定义的hook中或许有些不一样，这个后面再表）
+
+##### 自定义hook
+
+
 
