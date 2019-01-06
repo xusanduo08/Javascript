@@ -103,7 +103,7 @@ function Example(){
 }
 ```
 
-调用`useEffect`其实也就是在告诉React当变更实施到DOM上之后要调用这些副作用。
+调用`useEffect`其实也就是在告诉React当变更实施到DOM上之后要调用这些副作用（包括第一次渲染之后也会执行这些副作用）。
 
 `useState`也可以返回一个函数，这个函数可以用来“清除”副作用：
 
@@ -139,12 +139,65 @@ function FriendStatus(props){
 
 ##### Rules of Hooks
 
-Hook使用起来就是普通的函数，有两条引用规则：
+Hook使用起来就是普通的函数，但有两条引用规则：
 
 * 在组件头部调用hook，不要在循环语句、条件语句或者嵌套函数中调用。
-* 只能在React的function组件中调用hook，在一般的函数中不要调用。（在自定义的hook中或许有些不一样，这个后面再表）
+* 只能在React的function组件（常说的无状态组件）中调用hook，在一般的函数中不要调用。（__除非是自动以hook__）
 
 ##### 自定义hook
+
+含有状态的逻辑如果想复用的话传统的做法是使用高阶组件或者render-props，现在可以使用自定义hook来实现这样的需求。
+
+再看下上面那个例子，`FriendStatus`内部调用了`useState`和`useEffect`两个hook实现了对好友状态的订阅和显示。现在我们来自定义一个hook，使订阅逻辑也可以在其他组件中使用。
+
+```jsx
+import {useState, useEffect} from 'react';
+
+function useFriendStatus(friendID){
+    const [isOnline, setIsOnline] = useState(null);
+    function handleStatusChange(status){
+        setIsOnline(status.isOnline);
+    }
+    
+    useEffect(() => {
+        ChatAPI.subscribeToFriendStatus(friendID, handleStatusChange);
+        return ()=>{
+            ChatAPI.unsubscribeFromFriendStatus(friendID, handleStatusChange);
+        }
+    })
+    return isOnline;
+}
+```
+
+上面是一个自定义的hook，以一个friendID为入参。自定义hook其实就是一个普通的函数，只不过里面可以调用hook（`useState`）。
+
+看下在组件中如何使用：
+
+```jsx
+function FriendStatus(props){
+    const isOnline = useFriendStatus(props.friend.id);
+    if(isOnline === null){
+        return 'Loading...';
+    }
+    return isOnline ? 'Online' : 'Offline';
+}
+
+function FriendListItem(props){
+    const isOnline = useFriendStatus(props.friend.id);
+    
+    return (
+        <li style={{color: isOnline ? 'green' : 'black'}}>
+        	{props.friend.name}
+        </li>
+    )
+}
+```
+
+
+
+
+
+
 
 
 
