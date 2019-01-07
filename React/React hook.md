@@ -77,7 +77,7 @@ function ExampleWithManyStates(){
 
 有时候我们在组件中会去请求数据、订阅某些信息、或者去变更DOM，我们把这些操作统一称为“副作用”（side effects）。这些行为都有可能会对组件的渲染造成影响，同时在组件渲染时这些行为又不会立刻完成。
 
-针对副作用有个专门的hook，叫`useEffect`，通过`useEffect`可以在function组件中很方便的添加副作用。默认情况下，它的触发时机和class组件中`componentDidMount`、`componentDidUpdate`以及`componentWillUnMount`几个生命周期的触发时机一致（可以把`useEffect`当成是上面三个生命周期的合并）。
+针对副作用有个专门的hook，叫`useEffect`，通过`useEffect`可以在function组件中很方便的添加副作用。默认情况下，它的触发时机和class组件中`componentDidMount`、`componentDidUpdate`以及`componentWillUnMount`(会触发清除effect的操作)几个生命周期的触发时机一致（可以把`useEffect`当成是上面三个生命周期的合并）。
 
 下面的组件在每次更新后都会重新设置document title：
 
@@ -120,7 +120,7 @@ function FriendStatus(props){
     useEffect(() => {
     	// 订阅
         ChatAPI.subscribeToFriendStatus(props.friend.id, handleStatusChange);
-        // 返回的函数用来取消订阅
+        // 返回的函数用来取消订阅，在组件卸载前和下次执行effect前调用
         return () => {
             ChatAPI.unsubscribeFromFriendStatus(props.friend.id, handleStatusChange);
         };
@@ -133,9 +133,25 @@ function FriendStatus(props){
 }
 ```
 
-在上面的例子中，React会在组件卸载的时候去取消对`ChatAPI`的订阅。
+在上面的例子中，React会在组件卸载前和下次执行effect前去取消对`ChatAPI`的订阅。
 
 在组件中可以多次调用`useEffect`，这点和`useState`一样。
+
+__React会在挂载后，更新后执行effect，会在卸载前和下次执行effect前执行effect中返回的清除effect的操作以清除上一个effect。__
+
+__根据功能去划分effect，不同功能的effect放在不同的effect hook中，React会按照声明的顺序来调用它们。__
+
+
+
+每次更新都执行effect在某些情况有些浪费性能，我们可以通过给`useState`传递第二个参数的方法来告知React当某些值改变时再去执行effect。第二个参数为一个数组，数组元素为用来判断是否需要执行effect的变量：
+
+```javascript
+useEffect(() => {
+    document.title = `You clicked ${count} time`
+}, [count]);// count发生变化时才执行effect
+```
+
+在上面例子中，在某次re-render之后，React会去比较当前的count和之前的count是否发生变化，如果有变化就会执行effect，没有变化则不执行。数组中可以传入多个元素，当其中有一个发生变化时React就会去执行effect。
 
 ##### Rules of Hooks
 
@@ -194,6 +210,8 @@ function FriendListItem(props){
 ```
 
 
+
+组件中可能会有多个`useState`（或者其他hook调用），React是如何知道当前这个变量指向的是哪个state呢？或者说应该将组件的哪个state赋值给这个变量呢？
 
 
 
