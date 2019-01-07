@@ -2,7 +2,7 @@
 
 React发布了16.7.0-alpha版本，里面包含了一个重要的更新就是hooks。说白了，hooks的作用就是能使你在不使用class创建组件的情况下正常使用state以及在之前版本中其他class组件才有的一些特性。
 
-在介绍hook之前有个问题需要先解决。
+在介绍hook之前有个问题需要先明白。
 
 ##### 为什么需要hook？
 
@@ -26,7 +26,7 @@ React本身并没有现成的方法来使得组件之间实现逻辑复用。现
 
 以上三条就是React hook出现的原因。
 
-React hook的出现并不会改变现有开发者对React的一些理解，而且React也并没有计划去移除class。
+React hook的出现并不会改变开发者对React的已经存在的一些理解，而且React也并没有计划去移除class。
 
 ##### 什么是hook
 
@@ -57,7 +57,7 @@ function Example(){
 }
 ```
 
-这里，`useState`就是一个Hook。在上面的例子中，我们在function组件内部调用了`useState`来给组件增加状态，在re-render的时，React会去获取当前的state值并进行相应的渲染。`useState`方法会返回当前的state值以及设置状态值的方法，这个方法和`class`组件中的`this.setState`有些类似，有一个不同点就是它不会将新旧state进行合并（merge）。
+这里，`useState`就是一个Hook。在上面的例子中，我们在function组件内部调用了`useState`来给组件增加状态，在re-render的时，React会去获取当前的state值并进行相应的渲染。`useState`方法会返回当前的状态值以及设置状态值的方法，这个方法和`class`组件中的`this.setState`有些类似，有一个不同点就是它不会将新旧state进行合并（merge）。
 
 `useState`只有一个参数，是状态的初始值。在上面的例子中，0就是初始状态值。这里有个地方要提一下，class组件中`this.state`往往指向的是一个对象，而这地方使用`useState`创建的state则不必是对象。`useState`中传入的初始值会在组件第一次渲染时被用到。
 
@@ -77,7 +77,7 @@ function ExampleWithManyStates(){
 
 有时候我们在组件中会去请求数据、订阅某些信息、或者去变更DOM，我们把这些操作统一称为“副作用”（side effects）。这些行为都有可能会对组件的渲染造成影响，同时在组件渲染时这些行为又不会立刻完成。
 
-针对副作用有个专门的hook，叫`useEffect`，通过`useEffect`可以在function组件中很方便的添加副作用。它的触发时机和class组件中`componentDidMount`、`componentDidUpdate`以及`componentWillMount`几个生命周期的触发时机一致。
+针对副作用有个专门的hook，叫`useEffect`，通过`useEffect`可以在function组件中很方便的添加副作用。默认情况下，它的触发时机和class组件中`componentDidMount`、`componentDidUpdate`以及`componentWillUnMount`几个生命周期的触发时机一致（可以把`useEffect`当成是上面三个生命周期的合并）。
 
 下面的组件在每次更新后都会重新设置document title：
 
@@ -105,7 +105,7 @@ function Example(){
 
 调用`useEffect`其实也就是在告诉React当变更实施到DOM上之后要调用这些副作用（包括第一次渲染之后也会执行这些副作用）。
 
-`useState`也可以返回一个函数，这个函数可以用来“清除”副作用：
+`useEffect`也可以返回一个函数，这个函数可以用来“清除”副作用：
 
 ```javascript
 import {useState, useEffect} from 'react';
@@ -142,7 +142,7 @@ function FriendStatus(props){
 Hook使用起来就是普通的函数，但有两条引用规则：
 
 * 在组件头部调用hook，不要在循环语句、条件语句或者嵌套函数中调用。
-* 只能在React的function组件（常说的无状态组件）中调用hook，在一般的函数中不要调用。（__除非是自动以hook__）
+* 只能在React的function组件（常说的无状态组件）中调用hook，在一般的函数中不要调用。（__自定义hook除外__）
 
 ##### 自定义hook
 
