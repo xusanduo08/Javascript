@@ -1,6 +1,6 @@
 #### React Hook
 
-React发布了16.7.0-alpha版本，里面包含了一个重要的更新就是hooks。说白了，hooks的作用就是能使你在不使用class创建组件的情况下正常使用state以及在之前版本中其他class组件才有的一些特性。
+React在18年十月底发布了16.7.0-alpha版本，里面包含了一个重要的更新就是hooks。说白了，hooks的作用就是能使你在不使用class创建组件的情况下正常使用state以及在之前版本中其他class组件才有的一些特性。
 
 在介绍hook之前有个问题需要先明白。
 
@@ -245,7 +245,7 @@ useEffect(updateTitle)     // 4. 第四个还是一个effect，替换上一次ef
 
 
 
-
+剩下还有其他hook，可以参考[这里](https://reactjs.org/docs/hooks-reference.html)
 
 
 
