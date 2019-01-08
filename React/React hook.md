@@ -8,19 +8,19 @@ React发布了16.7.0-alpha版本，里面包含了一个重要的更新就是hoo
 
 1.组件之间状态化的逻辑难以复用
 
-React本身并没有现成的方法来使得组件之间实现逻辑复用。现有情况下，我们通常会用[render props](https://reactjs.org/docs/render-props.html)或者[HOC](https://reactjs.org/docs/higher-order-components.html)来实现一些逻辑的复用，但这两种方法在使用时都需要对组件结构做一些变更，这导致最终的组件有些笨重，而且也由于组件的嵌套，容易造成“嵌套地狱”（wrapper hell）。当组件嵌套层级很深时，数据的追踪也会有一些困难。所以说，React需要一种可以共享状态逻辑的方法。
+React本身并没有现成的方法来使得组件之间共享含有状态的逻辑。现有情况下，我们通常会用[render props](https://reactjs.org/docs/render-props.html)或者[HOC](https://reactjs.org/docs/higher-order-components.html)来实现一些逻辑的复用，但这两种方法在使用时都需要对组件结构做一些变更，这导致最终的组件有些笨重，而且也由于组件的嵌套，容易造成“嵌套地狱”（wrapper hell）。当组件嵌套层级很深时，数据的追踪也会有一些困难。所以说，React需要一种可以共享状态逻辑的方法。
 
 2.复杂的组件比较难理解
 
-在刚开始时，组件往往都比较简单，随着需求的增加，组件内部会增加各种逻辑和副作用。组件的各个生命周期内部也会包含各种互不相干的逻辑，例如，在`componentDidMount`和`componentDidUpdate`中有请求数据的逻辑，但在`componentDidMount`中还有事件绑定的逻辑，这个事件同时又在`componentWillUnmount`中解绑，可以看到，相互之间没有关系的逻辑（请求数据和绑定事件）放到了一个方法中，而有关系的逻辑却被分开（事件的绑定和解绑）----这容易导致bug产生，同时也会让测试难以进行。
+在刚开始时，组件往往都比较简单，随着需求的增加，组件内部会增加各种逻辑和副作用，各个生命周期内部也会包含各种互不相干的逻辑。例如在某种需求下，我们在`componentDidMount`和`componentDidUpdate`中添加了请求数据的逻辑，在`componentDidMount`中添加了事件绑定的逻辑，为了防止内存泄漏，我们又在`componentWillUnmount`中添加了解绑该事件的逻辑。可以看到，相互之间没有关系的逻辑（请求数据和绑定事件）放到了一个方法中，而有关系的逻辑（事件的绑定和解绑）却被分开----这容易导致bug产生，同时也会让测试难以进行。
 
 当组件内部的逻辑比较复杂时，我们首先想到的是拆分组件，但当组件各个声明周期都含有逻辑的时候往往组件也比较难以进行拆分。有些人喜欢使用状态管理工具（比如redux）来避免组件内部含有过多逻辑，但使用这些状态管理工具一般需要对逻辑进行更好的抽象，同时需要将生命周期的考虑在内。即使这些都做到了，也还会带来问题----组件会变得难以复用。
 
 3.什么时候用class，什么时候用function？
 
-首先，javascript中的this和其他语言的在理解上有较大差别，从某种意义上增加了学习和使用js中class的负担；而且，当使用class定义组件的时候，如果组件中有事件处理函数，可能还需要额外的进行bind操作，这其实有点啰嗦。无状态组件和class组件之间的区别以及何时使用它们当中的某一个一直有一些争议。
+首先，javascript中的this和其他语言的this在理解上有较大差别，从某种意义上增加了学习和使用class的负担；而且，当使用class定义组件的时候，如果组件中有事件处理函数，可能还需要额外的进行bind操作，这其实有点啰嗦。function组件和class组件之间的区别以及何时使用它们当中的某一个一直有一些争议。
 
-此外，React在尝试对组件进行预打包和优化时发现class组件会有些意想不到的情况出现，使得优化效果不那么明显。class组件不能被彻底压缩，还会使热加载变得怪异和不可靠。
+此外，React在尝试对组件进行预打包和优化时发现class组件会有些意想不到的情况出现，使得优化效果不那么明显。对于当下出现的一些工具来讲，class组件不能被彻底压缩，还会使热加载变得怪异和不可靠。
 
 
 
@@ -211,7 +211,37 @@ function FriendListItem(props){
 
 
 
-组件中可能会有多个`useState`（或者其他hook调用），React是如何知道当前这个变量指向的是哪个state呢？或者说应该将组件的哪个state赋值给这个变量呢？
+React在执行的时候会按照hook出现的顺序依次执行，例如`useState`，React根据顺序取出state并赋值给对应的变量。
+
+```
+function Form(){
+    const [name, setName] = useState('Mary');
+   	useEffect(function persistForm(){
+        localStorage.setItem('formData', name);
+   	})
+   	const [surname, setSurname] = useState('Poppings');
+   	useEffect(function updateTitle(){
+        document.title = name + ' ' + surname;
+   	})
+}
+
+// 第一次渲染
+// ------------
+useState('Mary')           // 1. 初始化一个state变量，并赋值为‘Mary’
+useEffect(persistForm)     // 2. 添加一个副作用
+useState('Poppins')        // 3. 初始化一个state变量，并赋值为‘Poppins’
+useEffect(updateTitle)     // 4. 添加一个副作用
+
+// -------------
+// 第二次渲染：第二次hook的执行会按照第一次的顺序去取出相关state或者替换effect
+// -------------
+useState('Mary')           // 1. 根据第一次hook的顺序，首先取出一个state给对应的变量
+useEffect(persistForm)     // 2. 第二个hook是一个effect，所以这一次是替换上一次执行的effect
+useState('Poppins')        // 3. 第三个hook又是一个state，再取出赋值给对应变量
+useEffect(updateTitle)     // 4. 第四个还是一个effect，替换上一次effect
+
+// ...
+```
 
 
 
