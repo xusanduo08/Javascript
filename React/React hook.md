@@ -24,7 +24,15 @@ React本身并没有现成的方法来使得组件之间共享含有状态的逻
 
 
 
-以上三条就是React hook出现的原因。
+以上三条就是React hook出现的原因，有了hook之后我们可以：
+
+1.不用再进行function组件到class组件的改造：之前是只有class组件才有state和生命周期方法，现在有了hook之后，function组件也可以使用state和生命周期。有了hook之后，不用为了使用state和生命周期再去把function组件改造成class组件了。而且function组件也比class组件更轻量一些。
+
+2.副作用可以更好的划分：之前副作用都是放在生命周期方法中的，并且一些副作用需要设置和清除两个阶段，而这两个阶段常被放置在不同的生命周期方法中。现在有了hook之后，一个副作用可以对应一个`useEffect`，并且设置和清除都可以放置这一个hook中。
+
+3.不再需要嵌套组件以共享逻辑：含有状态的一些逻辑可以抽取出来，很好的避免了HOC和render-props造成的'wrapper hell'。
+
+4.一定程度上降低React的学习成本：因为hook使得function组件就可以满足大部分的需求，所以React也就不需要每个人都对javascript中的class有很好的理解（尤其对那些刚接触js和React的人）。在写代码时也不会去纠结到底该用function组件还是class组件。
 
 React hook的出现并不会改变开发者对React的已经存在的一些理解，而且React也并没有计划去移除class。
 
