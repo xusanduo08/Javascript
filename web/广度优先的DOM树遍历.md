@@ -1,4 +1,4 @@
-### 广度优先的DOM树遍历
+### 广度优先和深度优先遍历DOM树
 
 ```html
 <div class="root">
@@ -108,3 +108,6 @@ P copyright
 
 
 
+队列： 先进先出（FIFO）
+
+栈：后进先出（LIFO）
