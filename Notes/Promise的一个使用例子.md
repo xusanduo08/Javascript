@@ -18,6 +18,17 @@ Promise.all(tasks).then(() => {
     console.log(new Date, i);
   }, 1000);
 })
+
+
+// 上面是之前写的了，不知道当时为什么这么写？感觉下面这么写也可以实现啊，还更简洁。
+for(let i = 0; i < 6; i++){
+    new Promise(resolve => {
+        setTimeout(() => {
+            console.log(i);
+            resolve();
+        }, i*1000)
+    })
+}
 ```
 
 使用了：声明即执行函数、const、箭头函数、Promise
@@ -53,7 +64,7 @@ Promise构造函数接收一个函数作为参数，该函数的两个参数分�
 
 Promise实例生成后，可以使用then方法指定`Resolved`和`Rejected`状态的回调函数。
 
-```
+```javascript
 promise.then(function (value){
   //success
 }, function (error) {
@@ -74,4 +85,115 @@ timeout(100).then((value) => {
 })
 //done
 ```
+
+
+
+##### Promise的错误处理
+
+调用`resolve`或者`reject`并不会终结Promise的参数函数的执行。
+
+```javascript
+new Promise((resolve, reject) => {
+    resolve(1);
+    console.log(2);
+}).then(r => {
+    console.log(r)
+})
+```
+
+上面代码在调用`resolve(1)`之后，后面的`console.log(2)`还是会执行，并且会首先打印出来。这是因为立即resolved的Promise是在本轮事件循环的末尾执行，总是晚于本轮循环的同步任务。
+
+
+
+`then()`方法的第二个参数用来作为promise被`reject`时（也包括运行出错时）的回调函数。
+
+promise运行出错或者reject时可以在两个地方处理错误，一个是在`then()`方法里定义reject时的回调函数，即第二个参数；一个是在调用链尾部添加`catch`方法。
+
+```javascript
+new Promise(resolve => {
+    throw new Error()
+}).then(res => {
+	console.log(res)
+}, err => {
+    console.log(err) // 会打印出错误堆栈
+})
+```
+
+以上的写法和下面这个效果类似
+
+```javascript
+new Promise(resolve => {
+    throw new Error(0)
+}).then(res => {
+    console.log(res)
+}).catch(err => {
+    console.log(err);
+})
+```
+
+Promise对象的错误具有“冒泡”性质，会一直向后传递，直到被捕获为止。也就是说，错误总是被下一个`catch`语句捕获。
+
+```javascript
+getJson('/post/1.json').then(post => getJson(post.commentURL))
+	.then(comments => {
+        // do something
+	}).catch(error => {
+        // 处理前三个Promise产生的错误
+	})
+```
+
+上面的三个Promise对象：一个由getJson产生，两个由then产生，它们之中任何一个抛出错误，都会被最后一个`catch`捕获。
+
+一般来说，不要在`then`方法里面定义reject状态的回调函数，总是使用`catch`方法。
+
+Promise会吃掉错误。
+
+##### 使用`Promise.all()`编排多个promise
+
+如果有多个异步请求需要发起，所有需求完成后又需要基于每个请求的返回值做些其他事情，这种情况下就可以采用`promise.all()`来完成。
+
+```javascript
+const f1 = fetch('./something.json');
+const f2 = fetch('./something2.json'); // fetch方法返回的也是promise实例
+
+Promise.all([f1, f2])
+	.then(res => {
+        console.log('Array of results', res);
+	})
+	.catch(err => {
+        console.log(err);
+	})
+```
+
+使用es6中数组的解构赋值后可以采用如下写法：
+
+```javascript
+Promise.all([f1, f2]).then(([res1, res2]) => {
+    console.log('Results', res1, res2);
+})
+```
+
+
+
+##### 使用`Promise.race()`来编排多个promise
+
+如果多个promise之间是竞态关系，其中有一个promise完成后就基于当前完成的promise的返回值执行后续动作，并且剩下的再有promise完成也不再执行后续动作，这种情况可以采用`Promise.race()`来实现。
+
+```javascript
+const promiseOne = new Promise((resolve, reject) => {
+    setTimeout(resolve, 500, 'one');
+})
+
+const promiseTwo = new Promise((resolve, reject) => {
+    setTimeout(resolve, 100, 'two');
+})
+
+Promise.race([promiseOne, promiseTwo]).then(result => {
+    console.log(result); // two
+})
+```
+
+
+
+
 
