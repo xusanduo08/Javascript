@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Page Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    
+</head>
+<body>
+    <!--几种常见属性选择器-->
+    <!--
+        [attr] 拥有某属性
+        document.querySelector('div[class]')
+    -->
+    <div class="text"></div>
+
+    <!--
+        [attr=value] 拥有某属性，并且属性值为value
+        document.querySelector('div[class=text]')
+    -->
+    <div class="text"></div>
+
+    <!--
+        [attr~=value] 拥有某属性，并且至少其中一个属性值为value
+        document.querySelectorAll('div[class~=text]')
+    -->
+    <div class="text name"></div>
+
+    <!--
+        [attr*=value] 拥有某属性，并且属性值字符串包含value子串
+        document.querySelectorAll('div[class*=text]')
+    -->
+    <div class="texttextname"></div>
+
+    <!--
+        [attr|=value] 拥有某属性，并且至少包含一个value值并且第一个值就是value，或者是以value为开头的，用'-'连接的单词
+    -->
+    <div class="text"></div>
+    <div class="text-name"></div>
+    <div class="name text"></div><!--这种就选择不到，因为text不是第一个属性值-->
+
+    <!--
+        [attr^=value] 拥有某属性，并且属性值是以value为开头的
+        document.querySelectorAll('div[class^=text]')
+    -->
+    <div class="textaaasss"></div>
+
+    <!--
+        [attr$=value] 拥有某属性，并且属性值是以value为结尾的
+        document.querySelectorAll('div[class$=value]')
+    -->
+    <div class="ssaastext"></div>
+    <div class="name text"></div><!--注意，这种也是可以被选择到的哦！-->
+</body>
+</html>
