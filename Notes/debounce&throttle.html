@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+    </head>
+    <body>
+        
+        name:<input type="">
+        <div class="name">
+            <p></p>
+            <div class="child"></div>
+        </div>
+        <script>
+            var input = document.getElementsByTagName('input')[0];
+            var debounce = function(fn, delay){
+                var timer = null;
+               
+                return function(args){
+                    var that = this;
+                    clearTimeout(timer);
+                    timer = setTimeout(function(){
+                        fn.call(that, args);
+                    }, delay)
+                }
+            }
+            input.onkeyup = debounce((e) => {
+                console.log(e.target.value, this)
+            }, 500)
+
+            function throttle1(fn, threshhold){
+                let timer = null;
+                let start = new Date();
+                return function(args){
+                    let that = this;
+                    let curr = new Date();
+                    clearTimeout(timer)
+                    if(curr - start >= threshhold){
+                        fn.call(that, args);
+                        start = curr;
+                    } else {
+                        timer = setTimeout(function(){
+                            fn.call(that, args);
+                        }, delay)
+                    }
+                }
+            }
+
+            function throttle2(fn, threshhold){
+                let timer = null;
+                return function(args){
+                    let that = this;
+                    if(!timer){
+                        timer = setTimeout(function(){
+                            fn.call(that, args);
+                            clearTimeout(timer);
+                            timer = null;
+                        }, threshhold)
+                    }
+                }
+            }
+
+            window.onmousemove = throttle2(function(e){
+                console.log(e.pageX, e.pageY);
+            }, 2000)
+        </script>
+    </body>
+</html>
