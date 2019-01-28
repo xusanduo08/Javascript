@@ -16,16 +16,14 @@ const appState = {
     }
 }
 
-function stateChanger(action){
+function stateChanger(state,action){
     switch (action.type){
         case 'UPDATE_TITLE_TEXT':
-          appState.title.text = action.text
-          break
+          return {...state, title:{...state.title, text: action.text}};
         case 'UPDATE_TITLE_COLOR':
-          appState.title.color = action.color
-          break
+          return {...state, title:{...state.title, color: action.color}}
         default:
-          break
+          return state;
     }
 }
 
@@ -34,7 +32,7 @@ function createStore(state, stateChanger){
     const subscribe = listener => listeners.push(listener);
     const getState = () => state;
     const dispatch = (action) => {
-        stateChanger(action)
+        state = stateChanger(state, action)
         listeners.forEach(listener => listener());
         
     };
@@ -47,5 +45,7 @@ store.subscribe(() => ReactDOM.render(<App book={store.getState()} />, document.
 ReactDOM.render(<App book={store.getState()} />, document.getElementById('root'));
 
 store.dispatch({type:'UPDATE_TITLE_TEXT', text:'what is redux'}); // 发起修改
+store.dispatch({type:'UPDATE_TITLE_COLOR', color: 'blue'}); // 发起修改
+store.dispatch({type:'UPDATE_TITLE_TEXT', text:'what is reaadux'}); // 发起修改
 
 serviceWorker.unregister();

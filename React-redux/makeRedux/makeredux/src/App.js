@@ -1,14 +1,27 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
+import Title from './Title.js';
+import Content from './Content.js';
 import './App.css';
 
 class App extends Component {
+
+    componentDidUpdate(){
+        console.log('App didUpdate');
+    }
+
+    shouldComponentUpdate(nextProps){
+        if(this.props.book !== nextProps.book){
+            return true;
+        }
+        return false;
+    }
+
     render(){
         return (
             <div>
-                <div id = 'title'>{this.props.book.title.text}</div>
-           		<div id = 'content'>{this.props.book.content.text}</div>
-             </div>
+        		<Title title={this.props.book.title} />
+        		<Content content={this.props.book.content} />
+        	</div>
         )
     }
 }
