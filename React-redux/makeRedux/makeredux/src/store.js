@@ -17,7 +17,9 @@ function stateChanger(state,action){
         case 'UPDATE_TITLE_TEXT':
           return {...state, title:{...state.title, text: action.text}};
         case 'UPDATE_TITLE_COLOR':
-          return {...state, title:{...state.title, color: action.color}}
+          return {...state, title:{...state.title, color: action.color}};
+        case 'UPDATE_CONTENT_TEXT':
+          return {...state, content:{...state.content, text: action.text}};
         default:
           return state;
     }

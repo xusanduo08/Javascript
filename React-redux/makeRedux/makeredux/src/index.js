@@ -7,8 +7,9 @@ import {store} from './store';
 
 ReactDOM.render(<App />, document.getElementById('root'));
 
-store.dispatch({type:'UPDATE_TITLE_TEXT', text:'what is redux'}); // 发起修改
-store.dispatch({type:'UPDATE_TITLE_COLOR', color: 'blue'}); // 发起修改
-store.dispatch({type:'UPDATE_TITLE_TEXT', text:'what is reaadux'}); // 发起修改
-
+// store.dispatch({type:'UPDATE_TITLE_TEXT', text:'what is redux'}); // 发起修改
+// store.dispatch({type:'UPDATE_TITLE_COLOR', color: 'blue'}); // 发起修改
+// store.dispatch({type:'UPDATE_TITLE_TEXT', text:'what is reaadux'}); // 发起修改
+store.dispatch({type:'UPDATE_CONTENT_TEXT', text:'redux is tool for state managering'})
+//store.dispatch({type:'UPDATE_CONTENT_TEXT', text:'redux is tool for state managerment'})
 serviceWorker.unregister();
