@@ -1,5 +1,3 @@
-import React from 'react';
-
 
 const appState = {
     title:{
@@ -39,8 +37,5 @@ function createStore(state, stateChanger){
 
 const store = createStore(appState, stateChanger)
 
-const storeContext = React.createContext({
-    store: store
-})
 
-export {store, storeContext}
+export {store}

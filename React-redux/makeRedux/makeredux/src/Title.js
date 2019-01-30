@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import {storeContext} from './store.js';
 import connect from './connect';
 
 
@@ -14,4 +13,4 @@ class Title extends Component {
   }
 }
 
-export default connect(storeContext,Title);
+export default connect(Title);

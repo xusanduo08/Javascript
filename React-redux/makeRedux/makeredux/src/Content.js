@@ -1,13 +1,9 @@
 import React, { Component } from 'react';
-import { storeContext } from './store.js';
 import connect from './connect';
 
 class Content extends Component {
-  constructor() {
-    super();
-    this.state = {
-      content: {}
-    }
+  componentDidUpdate(){
+      console.log('content didUpdate')
   }
   
   render() {
@@ -19,4 +15,4 @@ class Content extends Component {
   }
 }
 
-export default connect(storeContext,Content);
+export default connect(Content);
