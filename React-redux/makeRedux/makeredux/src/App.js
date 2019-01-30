@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import propTypes from 'prop-types';
 import Title from './Title.js';
 import Content from './Content.js';
 import './App.css';
