@@ -14,4 +14,4 @@ class Title extends Component {
   }
 }
 
-export default connect(storeContext, Title);
+export default connect(storeContext,Title);
