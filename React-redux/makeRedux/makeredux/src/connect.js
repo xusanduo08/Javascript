@@ -6,7 +6,6 @@ function connect(component) {
   class Connect extends React.Component {
 
     render() {
-      
       return (
         <reduxContext.Consumer>
           {({state}) => {
@@ -16,7 +15,6 @@ function connect(component) {
       )
     }
   }
-  
 
   return Connect;
 }

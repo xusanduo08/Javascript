@@ -1,3 +1,4 @@
+import createStore from './createStore';
 
 const appState = {
     title:{
@@ -23,17 +24,7 @@ function stateChanger(state,action){
     }
 }
 
-function createStore(state, stateChanger){
-    const listeners = [];
-    const subscribe = listener => listeners.push(listener);
-    const getState = () => state;
-    const dispatch = (action) => {
-        state = stateChanger(state, action)
-        listeners.forEach(listener => listener());
-        
-    };
-    return {getState, dispatch, subscribe};
-}
+
 
 const store = createStore(appState, stateChanger)
 
