@@ -62,7 +62,7 @@ console.log(result.name);//"fansheng"
 console.log(person1.name);//"dasheng"
 ```
 
-​	`person1`所存储的的引用地址的副本传递给了函数，函数内部对这个引用地址所指向的对象的`name`属性进行了修改，此时，这个引用地址存储在函数内部的`person`变量上，但是接下来，函数又将`person2`变量赋值给了`person`，`person`中存储的引用地址指向了`person2`对象。所以，函数最终返回的是`person2`对象。
+​	`person1`所存储的的引用地址的副本传递给了函数，函数内部对这个引用地址所指向的对象的`name`属性进行了修改，此时，这个引用地址存储在函数内部的`person`变量上，但是接下来，函数又将`person2`变量赋值给了`person`，于是`person`中存储了指向`person2`对象的地址。所以，函数最终返回的是`person2`对象。
 
 ​	这个地方可能有人会晕，` person = preson2;`这一步操作后，`person1`不应该就是`person2`么？大哥，这一步仅仅是将`person2`的引用地址的副本传给了`person`，并没有对`person`所指向的对象进行修改。而`person.name = "dasheng";`则是对`person`所指向的对象进行了修改。
 
