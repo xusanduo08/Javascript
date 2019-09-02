@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>plain object</title>
+  </head>
+  <body>
+    <div>
+      A html
+    </div>
+    <iframe src="./B.html" frameborder="0"></iframe>
+    <script>
+      window.onload = function(){
+        let action = window.frames[0].window.action;
+        console.log(Object.getPrototypeOf(action) === Object.prototype);
+        console.log(isPlainObject(action));
+      }
+      
+      function isPlainObject(obj){
+        if(typeof obj !== 'object' || obj === null) return false;
+
+        let proto = obj;
+        while(Object.getPrototypeOf(proto) !== null){
+          proto = Object.getPrototypeOf(proto)
+        }
+
+        return proto === Object.getPrototypeOf(obj);
+      }
+    </script>
+  </body>
+</html>
