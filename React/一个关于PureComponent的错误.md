@@ -22,7 +22,7 @@ class App extends Component {
   render() {
     const {items} = this.state;
     setTimeout(()=>{  //这地方设了一个定时器（我知道render里面不能设置定时器）
-      items[1].text = 'ssss';
+      items[1].text = 'ssss'; // 直接修改原对象，导致对象突变
       this.setState({items})
     }, 3000)
     return (
@@ -49,7 +49,7 @@ Item.js
 import React from "react";
 import { render } from "react-dom";
 
-class Item extends React.Component {
+class Item extends React.PureComponent {
   constructor(props){
     super(props);
     console.log('initial component')
