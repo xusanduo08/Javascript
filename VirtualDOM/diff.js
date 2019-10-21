@@ -93,7 +93,7 @@ function diff(oldList, newList, key){
           // 新旧list中都有这个item，但两者不在同一位置出现
           let nextItemKey = getItemKey(simulateList[j + 1], key); // 如果下一个item等于新list中当前item，则移除旧list中当前的item
           if(nextItemKey === itemKey){
-            remove(i); // 为什么是remove(i)？因为前面的插入操作，所以到i位置之前，oldList和newList的都是一样的，又因为插入时j不变，所以
+            remove(i); // 为什么是remove(i)？因为前面的插入操作，所以到i位置之前，oldList和newList的都是一样的，又因为插入时j不变，所以下一轮循环后，j位置的item在oldList中的索引和i相同
             removeSimulate(j);
             j++;
           } else { // 否则执行插入操作
