@@ -1,6 +1,11 @@
-/**@jsx createElement */
-import createElement from './createElement';
+import newDOM from './new';
+import oldDOM from './old';
+import diff from './diff';
+import dfs from './dfsWalk';
 
-let dom = <div>1234</div>
+// 对新旧两棵树进行深度优先遍历
+let {newList, oldList} = dfs(oldDOM, newDOM);
+let moves = diff(oldList, newList);
 
-export default dom;
+console.log(moves);
+
