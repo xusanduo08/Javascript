@@ -48,7 +48,7 @@ function diff(oldList, newList, key){
   while(i < oldList.length){
     item = oldList[i];
     itemKey = getItemKey(item, key);
-    if(itemkey){
+    if(itemKey){
       if(!newKeyIndex.hasOwnProperty(itemKey)){
         children.push(null); // 新list中已经移除了这个item，则在相同位置放置一个null
       } else {
@@ -84,7 +84,7 @@ function diff(oldList, newList, key){
     let simulateItemKey = getItemKey(simulateItem, key);
 
     if(simulateItem){
-      if(itemkey === simulateItemKey){
+      if(itemKey === simulateItemKey){
         j++; // 两者在相同位置的item相同，当前这个item不需要做变更
       } else {
         if(!oldKeyIndex.hasOwnProperty(itemKey)){
@@ -133,3 +133,5 @@ function diff(oldList, newList, key){
     children: children
   }
 }
+
+export default diff;
