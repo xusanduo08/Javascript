@@ -2,7 +2,7 @@
 import createElement from './createElement';
 
 let dom = <div>
-    <span>1234</span>
+    321
 </div>
 
 export default dom;

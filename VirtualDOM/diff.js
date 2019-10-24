@@ -56,6 +56,7 @@ function diff(oldList, newList, key){
         children.push(newList[newItemIndex]); // 取出新list中的item，放入到children中
       }
     } else {
+      debugger;
       let freeItem = newFree[freeIndex++];
       children.push(freeItem || null);
     }

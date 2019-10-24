@@ -48,17 +48,19 @@ function dfsWalk(oldNode, newNode, index, patches){
   let currentPatch = [];
   if(newNode === null){
     // 节点需要删除
-  } else if(typeof oldNode === 'string' && typeof newNode === 'string'){ // 都是文本节点
+  } else if(oldNode.type === 'TEXT_ELEMENT' && newNode.type === 'TEXT_ELEMENT'){ // 都是文本节点
     if(newNode !== oldNode){ // 如果文本内容不一样的话，则替换，一样的话不用操作
       currentPatch.push({type: patches.TEXT, content: newNode})
     }
-  } else if(oldNode.type === newNode.type && oldNode.key === newNode.key){ // 如果节点一样，则比较props
+  } else if(oldNode.type === newNode.type && oldNode.key === newNode.key){
+    // 如果节点一样，则比较props和其下的子元素
+    // 所有的不同都会放在以当前节点在深度遍历时对应id作为索引的数组元素中
     let propsPatches = diffProps(oldNode, newNode);
     if(propsPatches){
       currentPatch.push({type: patch.PROPS, props: propsPatches})
     }
-
-    diffChildren(oldNode.children, newNode.children, index, patches, currentPatch);
+    debugger;
+    diffChildren(oldNode.props.children, newNode.props.children, index, patches, currentPatch);
 
   } else { // 两节点不一样，则直接替换
     currentPatch.push({type: patch.REPLACE, node: newNode})
@@ -70,7 +72,8 @@ function dfsWalk(oldNode, newNode, index, patches){
 }
 
 function diffChildren(oldChildren, newChildren, index, patches, currentPatch){
-  let diffs = listDiff(oldChildren, newChildren, 'key');
+  debugger;
+  let diffs = listDiff(oldChildren, newChildren);
   newChildren = diffs.children; // 这个children里包含了新旧列表中都存在的节点
 
   if(diffs.moves.length){
@@ -92,3 +95,5 @@ function diffChildren(oldChildren, newChildren, index, patches, currentPatch){
 
 
 }
+
+export default diff;
