@@ -29,9 +29,9 @@ function applyPatches(node, currentPatches){
   currentPatches.forEach(function(currentPatch){
     switch(currentPatch.type){
       case REPLACE:
-        let newNode = (typeof currentPatch.node === 'string')
-          ? document.createTextNode(currentPatch.node)
-          : currentPatch.node.render()
+        let newNode = (typeof currentPatch.node.type === 'TEXT_ELEMENT')
+          ? document.createTextNode(currentPatch.node.props.nodeValue)
+          : document.createElement(currentPatch.node.type)
         node.parentNode.replaceChild(newNode, node);
         break;
       case REORDER:
@@ -81,7 +81,7 @@ function reorderChildren(node, moves){
           node.removeChild(node.childNodes[index]);
         }
         staticNodeList.splice(index, 1);
-      } else if(move.type === 1){
+      } else if(move.type === 1){ // insert item
         let insertNode = maps[move.item.key]
           ? maps[move.item.key].cloneNode(true)
           : (typeof move.item === 'object')
