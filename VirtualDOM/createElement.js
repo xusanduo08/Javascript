@@ -7,7 +7,7 @@ export default function createElement(type, config, ...args){
   props.children = rawChildren.filter(c => c != null && c != false)
     .map(c => {
       if(c instanceof Object){
-        props.count += c.props.count; // count属性记录了当前节点下所有子节点的数量，包括孙子节点、曾孙子节点等等哦~
+        props.count = c.props.count + 1; // count属性记录了当前节点下所有子节点的数量，包括孙子节点、曾孙子节点等等哦~
       } else {
         props.count ++;
       }
