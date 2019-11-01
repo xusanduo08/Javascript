@@ -104,7 +104,42 @@ console.log(foo.count); // 0 --WTF?
 
 `foo.count`的值依然是`0`，尽管`foo(...)`内部的`console.log()`通过四次输出证明了`foo(...)`确实被调用过了四次。其实，从字面理解`this`的含义开始，我们就错了。
 
-`foo.count = 0`这段代码在执行时确实给`foo`这个函数对象增加了一个`count`属性。但在函数内部的`this.count`引用中，`this`却不是指向函数对象的，所以，虽然属性名是一样的，但访问的对象不一样，因此产生了混淆。
+`foo.count = 0`这段代码在执行时确实给`foo`这个函数对象增加了一个`count`属性。但在函数内部的`this.count`引用中，`this`却不是指向函数对象的，所以，虽然属性名是一样的，但访问的对象不一样，因此得到的结果也不一样。
+
+**注意**：对于一个好学的开发者来说，此时会有个问题：“如果我当前操作的不是我期望的`count`属性，那这个`count`属性是哪里来的？”。事实上，深挖下去就会发现，我们实际上创建了一个全局变量`count`（具体原因请看第二章），而且操作结束后这个变量的值是`NaN`。当然，到这里我们可以会继续问：“为什么会创建一个全局变量？这个变量的值又为什么会是`NaN`而不是期望的值？”。（请看第二章）
+
+遇到这些问题后，大多数开发者都选择回避，然后去创建另一个对象，并在这个新建的对象上增加一个`count`属性来满足需求：
+
+```javascript
+function foo(num){
+  console.log('foo: ' + num);
+  // keep track of how many times `foo` is called
+  data.count++;
+}
+
+var data = {
+  count: 0
+}
+
+var i;
+for(i = 0; i < 10; i++){
+  if(i > 5){
+    foo(i);
+  }
+}
+
+// foo: 6
+// foo: 7
+// foo: 8
+// foo: 9
+
+// how many times was `foo` called?
+console.log(data.count); // 4
+```
+
+这种方法虽然能满足需求，但回避了要讨论的问题----`this`到底是什么以及它是如何工作的，
+
+
 
 
 
