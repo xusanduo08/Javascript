@@ -67,7 +67,7 @@ speak(me); // Hello, I'm KYLE
 
 如果过分的从字面上理解"this"，那带给开发者的只有困惑。关于“this”的常规理解有两种，但很抱歉，这两种都是错误的。
 
-#### Itself
+#### 自身
 
 第一种理解是将`this`理解成指向函数自身。从语法上看，这似乎有情可原。
 
@@ -137,7 +137,92 @@ for(i = 0; i < 10; i++){
 console.log(data.count); // 4
 ```
 
-这种方法虽然能满足需求，但回避了要讨论的问题----`this`到底是什么以及它是如何工作的，
+这种方法虽然能满足需求，但也只是规避了问题----`this`到底是什么以及它是如何工作的，取而代之的是使用更熟悉的词法作用域的机制来解决问题。
+
+**注意：**虽然词法作用域是个很强大很好用的工具（可以查看本系列的“作用域和闭包”），但我们依然要去理解`this`，不能在对`this`感到迷惑或者不理解时总是回头去使用词法作用域，而不去学习`this`的机制和原理。
+
+使用`this`是无法完成在函数对象内部获取指向函数对象的引用这一“使命”的。你可以通过一个指向函数对象的词法标识符来获取函数对象的引用。
+
+看下面的代码：
+
+```javascript
+function foo(){
+  foo.count = 4; // `foo` refers to itself
+}
+setTimeout(function(){
+  // anonymous function (no name), cannot
+  // refer to itself
+}, 10);
+```
+
+第一个函数是个“具名“函数，在函数内部可以通过`foo`来获取指向函数的引用。
+
+但是在第二段代码中，传入`setTimeout(...)`的回调函数是个匿名的回调函数，也因此，在这个匿名函数内部并没有合适的方法来指向函数自身。
+
+**注意：**函数内部的`argument.callee`引用可以指向当前正在执行的函数对象，但这个属性已经被废弃了，尽管这是在匿名函数内部指向函数自身的唯一方法。其实，最好的方法就是不要使用匿名函数，而是使用具名函数，至少对于那些需要引用自身的方法来说是这样的。
+
+所以，对于一开始的例子来说，解决方法就是使用`foo`标识符来指向函数对象，而不是使用`this`：
+
+```javascript
+function foo(num){
+  console.log('foo: ' + num);
+  // keep track of how many times `foo` is called
+  foo.count++;
+}
+foo.count = 0;
+var i;
+for(i = 0; i < 10; i++){
+  if(i >5){
+    foo(i);
+  }
+}
+// foo: 6
+// foo: 7
+// foo: 8
+// foo: 9
+
+// how many times was `foo` called
+console.log(foo.count); // 4
+```
+
+但是，这种方法还是没有直面对`this`的理解，本质上还是依赖了`foo`这个变量的词法作用域。
+
+还有种方法是强制`this`指向`foo`函数对象：
+
+```javascript
+function foo(num){
+  console.log('foo: ' + num);
+  
+  // keep track of how many times `foo` is called
+  // Note: `this` IS actually `foo` now, based on
+  // how `foo` is called(see below)
+  this.count++;
+}
+foo.count = 0;
+var i;
+for(i = 0; i < 10; i++){
+  if(i > 5){
+    // using `call(...)`, we ensure the `this`
+    // points at the function object (`foo`) itself
+    foo.call(foo, i);
+  }
+}
+// foo: 6
+// foo: 7
+// foo: 8
+// foo: 9
+
+// how many times was `foo` called?
+console.log(foo.count); // 4
+```
+
+**这次我们没有回避`this`，并且还使用了它**。我们会完整的介绍`this`是如何工作的，所以如果现在还很困惑的话，也不用担心，且看后面分解。
+
+#### 自身的作用域
+
+
+
+
 
 
 
