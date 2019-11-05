@@ -1,5 +1,5 @@
 import diffList from './diffList';
-import {diffWalk, dfsWalk} from './diff';
+import {dfsWalk} from './diff';
 
 export default function diffChildren(oldChildren, newChildren, index, patches, currentPatches){
   // 比较当前层节点要做的插入和删除操作
