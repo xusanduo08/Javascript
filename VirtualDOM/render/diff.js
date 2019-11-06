@@ -42,6 +42,6 @@ export function dfsWalk(oldNode, newNode, index, patches){
   }
 
   if(currentPatch.length){
-    patches.push(currentPatch);
+    patches[index] = currentPatch;
   }
 }

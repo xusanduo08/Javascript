@@ -5,7 +5,7 @@ export default function diffChildren(oldChildren, newChildren, index, patches, c
   // 比较当前层节点要做的插入和删除操作
   // 同时对oldNode和newNode中都存在的节点进行diff
   let diffs = diffList(oldChildren, newChildren); // 同层节点的比较
-  let newChildren = diffs.children; // oldNode和newNode中都存在的节点，值为null的则表示oldNode中对应位置的元素要删除
+  newChildren = diffs.children; // oldNode和newNode中都存在的节点，值为null的则表示oldNode中对应位置的元素要删除
   /**
    * diffs:{
    *  moves: [],
