@@ -107,7 +107,7 @@ function diff(oldList, newList, key){
             j++;
             // 上面移除之后为什么还要j++ ? 因为j+1 和 i位置的item相同，移除 j 之后，j + 1 位置的item索引变成 j，此时 j 和 i 位置的item相同，所以 j++，比较下一个item就可以了
           } else { // 否则执行插入操作
-            inset(i, item); // 如果两者都有的话，直接插入一个节点oldTree最终不就多出一个节点么 ？多出的节点在最后删除
+            insert(i, item); // 如果两者都有的话，直接插入一个节点oldTree最终不就多出一个节点么 ？多出的节点在最后删除
           }
         }
       }
