@@ -3,7 +3,7 @@ export default function diffProps(oldNode, newNode){
   // 已经不存在的属性，要删除
   // 属性值已经改变的，要更新
   // 新增的属性，要添加
-  // 直接返回一个对象，这个对象上的所有属性都要添加到oldNode上
+  // 直接返回一个对象，这个对象上的所有非null的属性都要添加到oldNode上
   let oldProps = oldNode.props;
   let newProps = newNode.props;
   let flag = false;
@@ -18,6 +18,11 @@ export default function diffProps(oldNode, newNode){
     } else if(!oldProps.hasOwnProperty(key) && key !== 'children'){ // 新增的属性
       flag = true;
       propsPatches[key] = value;
+    }
+  }
+  for(let key in oldProps){
+    if(!newProps.hasOwnProperty(key)){
+      propsPatches[key] = null; // 不存在的属性要进行删除
     }
   }
 
