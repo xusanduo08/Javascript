@@ -9,7 +9,6 @@ export default function render({type, props}, parentDOM){
 
   for(let key in props){
     if(key !== 'children' && type !== 'TEXT_ELEMENT'){
-      console.log(dom, props)
       dom.setAttribute(key, props[key]);
     }
   }
@@ -19,6 +18,8 @@ export default function render({type, props}, parentDOM){
       render(child, dom);
     })
   }
-
-  parentDOM.appendChild(dom);
+  if(parentDOM){
+    parentDOM.appendChild(dom);
+  }
+  return dom;
 }
