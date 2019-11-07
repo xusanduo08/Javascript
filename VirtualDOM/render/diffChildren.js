@@ -13,13 +13,12 @@ export default function diffChildren(oldChildren, newChildren, index, patches, c
    * }
    */
   if(diffs.moves.length){
-    currentPatches.push({type: 1, moves: diffs.moves}); // 包含对当前层子节点的删除/插入操作
+    currentPatches.push({type: 1, moves: diffs.moves}); // 包含对当前层子节点的删除/插入操作，如果没有删除或者插入，也存在属性需要更新的可能
   }
 
   let currentIndex = index;
   // 接下来对oldNode和newNode中都存在的节点进行diff
   oldChildren.forEach((child, i) => {
-    
     let leftNode = null;
     // 计算当前节点在深度遍历时的索引
     currentIndex = leftNode && leftNode.count 
