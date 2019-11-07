@@ -30,8 +30,8 @@ export default function diffList(oldList, newList){
 
 
   let simulateList = children.slice(0);
-  simulateList.forEach(item => { // 过滤null，生成对oldList中元素的remove操作
-    if(item === null){
+  simulateList.forEach((item, index) => { // 过滤null，生成对oldList中元素的remove操作
+    if(item == null){
       moves.push({type: 0, index});
       simulateList.splice(index, 1);
     }
@@ -44,7 +44,6 @@ export default function diffList(oldList, newList){
 
     let simulateItem = simulateList[j];
     let simulateItemKey = simulateItem ? simulateItem.props.key : undefined; // 考虑simulateItem不存在的情况
-
     if(simulateItem){
       if(simulateItemKey === itemKey){ // 两者在相同位置的元素的key值相同，指针同时后移
         j++;
