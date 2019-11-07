@@ -22,11 +22,12 @@ export default function diff(oldTree, newTree){
 // 输入的两个节点都是属于同层、同位置的节点
 export function dfsWalk(oldNode, newNode, index, patches){
   let currentPatch = []; // 当前节点要做的变更
-  if(newNode === null){
+  
+  if(newNode == null){
     // 删除旧节点
   } else if(oldNode.type === 'TEXT_ELEMENT' && newNode.type === 'TEXT_ELEMENT'){ // 如果是文本节点
     if(oldNode.props.nodeValue !== newNode.props.nodeValue){
-      currentPatch.push({type: PATCHES.TEXT, nodevalue: newNode.props.nodeValue});
+      currentPatch.push({type: PATCHES.TEXT, nodeValue: newNode.props.nodeValue});
     }
   } else if(oldNode.type === newNode.type){ // 如果两个节点类型一致，则比较两者的props和children
 
