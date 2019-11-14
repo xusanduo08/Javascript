@@ -2,7 +2,7 @@
 
 [原文链接](https://evilmartians.com/chronicles/optimizing-react-virtual-dom-explained)
 
-这篇文章主要介绍React的一下几个方面：
+这篇文章主要介绍React的以下几个方面：
 
 1、React是如何将JSX渲染成页面；
 
