@@ -1,7 +1,6 @@
 const shell = require('shelljs');
 const chalk = require('chalk');
 const shellHelper = require('../lib/shellHelper');
-const analysis = require('../lib/analysis');
 
 let config = {
   autoPublish: false
@@ -35,7 +34,7 @@ function build(meetConfig, module){
 
     console.log(chalk.green('Build finished!'));
 
-    analysis(config.upload.config.srcDir);
+    
   })
 }
 
