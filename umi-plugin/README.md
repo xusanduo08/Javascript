@@ -26,7 +26,7 @@ export default {
       username, // 用户名
       password, // 密码
       path, // 所上传文件的本地路径
-      targetPath // 远程主机路径
+      targetPath // 远程主机上文件存放的（绝对路径）
     }],
   ],
 }
