@@ -1,9 +1,6 @@
-# umi-plugin
-
-[![NPM version](https://img.shields.io/npm/v/umi-plugin.svg?style=flat)](https://npmjs.org/package/umi-plugin)
-[![NPM downloads](http://img.shields.io/npm/dm/umi-plugin.svg?style=flat)](https://npmjs.org/package/umi-plugin)
-
-
+# umi-plugin-upload
+基于umi的插件，文件构建完毕后自动上传至指定服务器
+在没有远程构建的情况下，避免本地构建结束后，手动上传文件至远程服务器的情况
 
 ## Install
 
@@ -24,7 +21,13 @@ Configure in `.umirc.js`,
 ```js
 export default {
   plugins: [
-    ['umi-plugin-umi-plugin', options],
+    ['umi-plugin-upload', {
+      host, // 远程主机名
+      username, // 用户名
+      password, // 密码
+      path, // 所上传文件的本地路径
+      targetPath // 远程主机路径
+    }],
   ],
 }
 ```

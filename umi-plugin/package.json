@@ -1,5 +1,5 @@
 {
-  "name": "umi-plugin",
+  "name": "umi-plugin-upload",
   "version": "0.0.1",
   "description": "",
   "authors": {
@@ -10,15 +10,15 @@
   "peerDependencies": {
     "umi": "2.x || ^2.9.0-0"
   },
-  "main":  "./lib/index.js",
+  "main": "./lib/index.js",
   "scripts": {
-    "start": "cross-env APP_ROOT=$PWD/Javascript/umi-plugin/example umi dev",
-    "build":  "father-build",
+    "start": "cross-env APP_ROOT=G:/UserData/My Documents/GitHub/Javascript/umi-plugin/example umi dev",
+    "build": "father-build",
     "prepublishOnly": "npm run build && np --no-cleanup --yolo --no-publish"
   },
   "devDependencies": {
     "cross-env": "^6.0.3",
-    "father-build":  "^1.8.0",
+    "father-build": "^1.8.0",
     "np": "^5.0.3",
     "umi": "^2.9.0",
     "umi-types": ">= 0.4.0-beta.4"
@@ -28,5 +28,9 @@
     "src",
     "ui"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "scp2": "^0.5.0",
+    "ssh2": "^0.8.7"
+  }
 }
