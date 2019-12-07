@@ -1,18 +1,18 @@
 {
   "name": "umi-plugin-upload",
   "version": "0.0.1",
-  "description": "",
+  "description": "Upload output file after build successfully",
   "authors": {
-    "name": "",
-    "email": ""
+    "name": "xusanduo08",
+    "email": "2279190887@qq.com"
   },
-  "repository": "/umi-plugin",
+  "repository": "https://github.com/xusanduo08/Javascript/tree/master/umi-plugin-upload",
   "peerDependencies": {
     "umi": "2.x || ^2.9.0-0"
   },
   "main": "./lib/index.js",
   "scripts": {
-    "start": "cross-env APP_ROOT=G:/UserData/My Documents/GitHub/Javascript/umi-plugin/example umi dev",
+    "start": "cross-env APP_ROOT=/example umi dev",
     "build": "father-build",
     "prepublishOnly": "npm run build && np --no-cleanup --yolo --no-publish"
   },
