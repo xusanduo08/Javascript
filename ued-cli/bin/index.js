@@ -2,7 +2,6 @@
 const path = require('path');
 const fs = require('fs');
 const program = require('commander');
-const build = require('../commands/build');
 const shell = require('shelljs');
 const inquirer = require('inquirer');
 const client = require('scp2');
@@ -16,44 +15,28 @@ if(fs.existsSync(path.resolve('meet.config.js'))){
 
 program.version('1.0.0', '-v, --version');
 
-program.command('build [password]')
-  .description('git build specify module and assets upload to CDN')
+program.command('publish [pwd]')
   .action(function(pwd){
-    if(!pwd){
-      inquirer.prompt([
-        {
-          name:'password',
-          message:'Input password',
-          type:'Password'
-        }
-      ]).then(answer => {
-        let result = shell.exec('npm run build');
-        if(result.code === 0){
-            
-        }
-      })
-    }
-    
-  })
-
-program.command('publish')
-  .action(function(){
+    console.log('Uploading...');
     client.scp('dist/', {
       host:'172.16.81.64',
       username:'web',
-      password: 'smart',
+      password: pwd,
       path:'/cvbs/web/dist'
     }, err => {
+      if(err){
+        throw err;
+      }
       let conn = new Client();
       conn.on('ready', function(){
         console.log('Client :: ready');
-        conn.exec('ls', function(err, stream){
+        conn.exec('rm -rf r81;mv dist r81', function(err, stream){
           if(err){
             throw err;
           }
           stream.on('close', function(code, signal){
             console.log('Stream :: close :: code ' + code + 'signal: ' + signal);
-            conn.end();
+            conn.end(); // 关闭socket链接
           }).on('data', function(data){
             console.log('stdout:: ' + data);
           })
@@ -61,7 +44,7 @@ program.command('publish')
       }).connect({
         host:'172.16.81.64',
         username:'web',
-        password:'smart'
+        password: pwd
       })
     })
     

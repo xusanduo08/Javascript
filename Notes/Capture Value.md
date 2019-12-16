@@ -97,7 +97,7 @@ class ProfilePage extends React.Component {
 }
 ```
 
-其实还是利用了匿名函数创建闭包，使用闭包引用这正确的`user`信息。
+其实还是利用了匿名函数创建闭包，使用闭包引用着正确的`user`信息。
 
 这种方法有效，但是麻烦。如果`showMessage`内部还调用了其他使用props或者state的方法，那也会遇到同样的问题，为了解决问题也需要提前传递props或者state。这样做整个代码显得很笨重。
 
@@ -148,8 +148,64 @@ props被当做参数传入到`ProfilePage`中，并保存在`ProfilePage`的作�
 
 当父组件使用不同的props渲染`ProfilePage`时，React会再次调用`ProfilePage`方法。而我们刚刚触发的事件方法属于前一次渲染，前一次渲染有自己的`user`值供`showMessage`方法读取，并且这个值保持着不变。
 
-
-
 所以，function component和class component之间最大的区别就是：
 
 **Function components capture the rendered values.**
+
+**Hooks也具有capture value特性**
+
+```javascript
+function MessageThread() {
+  const [message, setMessage] = useState('');
+
+  const showMessage = () => {
+    alert('You said: ' + message);
+  };
+
+  const handleSendClick = () => {
+    setTimeout(showMessage, 3000);
+  };
+
+  const handleMessageChange = (e) => {
+    setMessage(e.target.value);
+  };
+
+  return (
+    <>
+      <input value={message} onChange={handleMessageChange} />
+      <button onClick={handleSendClick}>Send</button>
+    </>
+  );
+}
+```
+
+上面代码中，`message`能保留属于特定render的数据，并能提供给属于这个render的事件回调使用。所以在3秒之后，页面上显示出的仍然是3秒前点击button时input框内输入的值。
+
+**如果不想capture value，想获取到最新的props和state怎么办？**
+
+在class component中，直接读取`this.props`或者`this.state`就可以了，因为React会改变`this`变量。
+
+在function component中，可以通过`ref`来实现相同的功能。
+
+```javascript
+function MessageThread() {
+  const [message, setMessage] = useState('');
+
+  // Keep track of the latest value.
+  const latestMessage = useRef('');
+  useEffect(() => {
+    latestMessage.current = message;
+  });
+
+  const showMessage = () => {
+    alert('You said: ' + latestMessage.current);
+  };
+}
+```
+
+代码中读取`lastestMessage.current`就能获取到最新的state。
+
+
+
+来源：https://github.com/gaearon/overreacted.io/blob/master/src/pages/how-are-function-components-different-from-classes/index.md
+
