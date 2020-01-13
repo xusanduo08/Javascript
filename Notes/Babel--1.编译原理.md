@@ -6,6 +6,8 @@
 * 转换 Transformation
 * 代码生成 Code Generation
 
+Babel工作过程基本就是上面三步。
+
 
 
 ### 解析 Parsing
