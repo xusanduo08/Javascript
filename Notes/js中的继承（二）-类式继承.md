@@ -7,7 +7,7 @@
 >- 对象会记住它的原型
 >- 如果对象无法响应某个请求，它会把这个请求委托给它自己的原型
 
-### 类式继承
+### 类式继承/原型链继承
 
 ```javascript
 //声明父类
@@ -52,4 +52,4 @@ instance.__proto__.__proto__.__proto__=>Object.prototype;
 instance.__proto__.__proto__.__proto__.__proto__ = null;
 ```
 
-​	上面展示的就是对象`instance`的原型链，通过原型链来一层层寻找属性和方法，找到即止，找不到则返回`undefined`
+上面展示的就是对象`instance`的原型链，通过原型链来一层层寻找属性和方法，找到即止，找不到则返回`undefined`
