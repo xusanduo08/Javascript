@@ -53,11 +53,11 @@ export default text;
   });
 ```
 
-可以看出，打包出的源码就是一个立即执行函数，前半部分是方法主体，后半部分是方法入参。入参是一个对象，对象的key是被打包文件的路径，而value值为一个方法，简单的看下可以看出方法内代码和对应的模块代码一致，可以认为这个方法就是模块对应的加载方法。
+可以看出，打包出的源码就是一个立即执行函数，前半部分是方法主体，后半部分是方法入参。入参是一个对象，对象的key是被打包文件的路径，而value值为一个方法，方法内运行的是模块内容。姑且把整个对象叫做模块对象。
 
 在前半部分的函数体结尾，执行了`__webpack_require__(__webpack_require__.s = "./src/index.js");`方法，整个程序其实也是从这里开始。
 
-`__webpack__require(moduleId)`：根据传入的模块id加载对应的模块并缓存，最后返回模块导出的内容
+`__webpack__require(moduleId)`：根据传入的moduleId加载对应的模块并缓存，最后返回模块导出的内容
 
 ```javascript
 // 模块缓存
@@ -93,7 +93,7 @@ modules[moduleId].call(module.exports, module, module.exports, __webpack_require
 
 读取`moduleId`对应的模块加载方法并执行。
 
-`modules`就是入参对象：
+`modules`就是传入进来的模块对象：
 
 ```javascript
 {
@@ -156,7 +156,7 @@ console.log(text)
 
 ```javascript
 // 加载sync.js
-__webpack_require__(/*! ./syncc.js */ "./src/sync.js");
+__webpack_require__("./src/sync.js");
 ```
 
 同样的，加载`sync.js`时也是先去缓存中看一下之前有没有加载过这个模块，没有的话再去加载：
@@ -193,11 +193,11 @@ __webpack__exports__["default"] = (text);
   };
 ```
 
-而模块加载方法内的`__webpack__exports__`就是传入进来的`module.exports`对象，在`__webapck__require__()`方法最后返回`module.exports`，要导出的内容就被返回了。
+而模块加载方法内的`__webpack__exports__`就是传入进来的`module.exports`对象，在`__webapck__require__()`方法最后返回`module.exports`，所以要导出的内容就被返回了。
 
 
 
-总结一下，每个模块在编译之后都是一个函数，这些函数挂在某一个对象下，以自己的文件路径为属性key，类似下面的结构：
+总结一下，每个模块在编译之后都是一个函数，这些函数挂在模块对象下，以自己的文件路径为属性key，类似下面的结构：
 
 ```javascript
 {
@@ -214,7 +214,7 @@ __webpack__exports__["default"] = (text);
 
 
 
-模块的加载过程主要用到的就是`__webpack_require__(moduleId)`这个方法。加载流程就是先加载入口模块（index.js），如果当前模块内部又引用了其他模块（sync.js），则继续使用`__webpack_require__(moduleId)`去加载，这样一直**递归**加载下去，直到所有模块都加载完毕。对于每个加载过的模块都会被缓存起来（存储在installedModules[moduleId]下），后续再次用到时会直接去缓存中获取而不用再去执行一次模块。
+模块的加载过程主要用到的就是`__webpack_require__(moduleId)`这个方法。加载流程就是先加载入口模块（index.js），如果当前模块内部又引用了其他模块（sync.js），则继续使用`__webpack_require__(moduleId)`去加载，这样一直**递归**加载下去，直到所有模块都加载完毕。对于每个加载过的模块都会被缓存起来（存储在`installedModules[moduleId]`下），后续再次用到时会直接去缓存中获取而不用再去执行一次模块。
 
 ![](../img/模块加载流程.jpg)
 
