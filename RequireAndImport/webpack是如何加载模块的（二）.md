@@ -35,29 +35,29 @@ index.bundle.js：
 
 ```javascript
 (function(modules) { 
- 	function webpackJsonpCallback(data) {
- 		// ...
- 	};
- 	// 模块缓存
- 	var installedModules = {};
+  function webpackJsonpCallback(data) {
+    // ...
+  };
+  // 模块缓存
+  var installedModules = {};
   // 已加载（0）/待加载（undefined）/预加载（preloaded）/正在加载（promise）的模块
- 	var installedChunks = {
- 		"index": 0
- 	};
+  var installedChunks = {
+    "index": 0
+  };
    
- 	function jsonpScriptSrc(chunkId) {
+  function jsonpScriptSrc(chunkId) {
     // ...
- 	}
+  }
    
- 	// The require function
- 	function __webpack_require__(moduleId) {
+  // The require function
+  function __webpack_require__(moduleId) {
     // ...
- 	}
+  }
 
- 	__webpack_require__.e = function requireEnsure(chunkId) {
- 		// ...
- 	};
- 	return __webpack_require__(__webpack_require__.s = "./src/index.js");
+  __webpack_require__.e = function requireEnsure(chunkId) {
+    // ...
+ };
+  return __webpack_require__(__webpack_require__.s = "./src/index.js");
  })({
  "./src/index.js":
    (function(module, __webpack_exports__, __webpack_require__) {
@@ -124,66 +124,66 @@ index.bundle.js：
 
 ```javascript
 __webpack_require__.e = function requireEnsure(chunkId) {
- 		var promises = [];
- 		var installedChunkData = installedChunks[chunkId];
- 		if(installedChunkData !== 0) { // 0 表示已经加载过
- 			// 正在加载
- 			if(installedChunkData) {
- 				promises.push(installedChunkData[2]);
- 			} else {
- 				// 创建promise，并存放到缓存installedChunks中
- 				var promise = new Promise(function(resolve, reject) {
- 					installedChunkData = installedChunks[chunkId] = [resolve, reject];
- 				});
- 				promises.push(installedChunkData[2] = promise);
+  var promises = [];
+  var installedChunkData = installedChunks[chunkId];
+  if(installedChunkData !== 0) { // 0 表示已经加载过
+    // 正在加载
+    if(installedChunkData) {
+      promises.push(installedChunkData[2]);
+    } else {
+      // 创建promise，并存放到缓存installedChunks中
+      var promise = new Promise(function(resolve, reject) {
+        installedChunkData = installedChunks[chunkId] = [resolve, reject];
+      });
+      promises.push(installedChunkData[2] = promise);
 
- 				// 开始加载异步模块
-        // 创建script标签
- 				var script = document.createElement('script');
- 				var onScriptComplete;
-				// 设置字符集
- 				script.charset = 'utf-8';
-        // 设置超时时间
- 				script.timeout = 120;
- 				if (__webpack_require__.nc) {
- 					script.setAttribute("nonce", __webpack_require__.nc);
- 				}
-        // 设置src
- 				script.src = jsonpScriptSrc(chunkId);
+      // 开始加载异步模块
+      // 创建script标签
+      var script = document.createElement('script');
+      var onScriptComplete;
+      // 设置字符集
+      script.charset = 'utf-8';
+      // 设置超时时间
+      script.timeout = 120;
+      if (__webpack_require__.nc) {
+        script.setAttribute("nonce", __webpack_require__.nc);
+      }
+      // 设置src
+      script.src = jsonpScriptSrc(chunkId);
 
- 				var error = new Error();
-        // 加载完成/超时/出错 事件响应方法
- 				onScriptComplete = function (event) {
- 					// 避免IE中出现内存泄漏
- 					script.onerror = script.onload = null; 
-          // 清除定时器
- 					clearTimeout(timeout);
- 					var chunk = installedChunks[chunkId];
- 					if(chunk !== 0) {
- 						if(chunk) {
+      var error = new Error();
+      // 加载完成/超时/出错 事件响应方法
+      onScriptComplete = function (event) {
+        // 避免IE中出现内存泄漏
+        script.onerror = script.onload = null; 
+        // 清除定时器
+        clearTimeout(timeout);
+        var chunk = installedChunks[chunkId];
+          if(chunk !== 0) {
+            if(chunk) {
               // 设置错误信息
- 							var errorType = event && (event.type === 'load' ? 'missing' : event.type);
- 							var realSrc = event && event.target && event.target.src;
- 							error.message = 'Loading chunk ' + chunkId + ' failed.\n(' + errorType + ': ' + realSrc + ')';
- 							error.name = 'ChunkLoadError';
- 							error.type = errorType;
- 							error.request = realSrc;
- 							chunk[1](error);
- 						}
- 						installedChunks[chunkId] = undefined;
- 					}
- 				};
+              var errorType = event && (event.type === 'load' ? 'missing' : event.type);
+              var realSrc = event && event.target && event.target.src;
+              error.message = 'Loading chunk ' + chunkId + ' failed.\n(' + errorType + ': ' + realSrc + ')';
+              error.name = 'ChunkLoadError';
+              error.type = errorType;
+              error.request = realSrc;
+              chunk[1](error);
+            }
+            installedChunks[chunkId] = undefined;
+          }
+        };
         // 定时器，超时后触发
- 				var timeout = setTimeout(function(){
- 					onScriptComplete({ type: 'timeout', target: script });
- 				}, 120000);
- 				script.onerror = script.onload = onScriptComplete;
+        var timeout = setTimeout(function(){
+          onScriptComplete({ type: 'timeout', target: script });
+        }, 120000);
+        script.onerror = script.onload = onScriptComplete;
         // 将script标签添加到head内，开始加载脚本
- 				document.head.appendChild(script);
- 			}
- 		}
- 		return Promise.all(promises);
- 	};
+        document.head.appendChild(script);
+      }
+    }
+    return Promise.all(promises);
+  };
 ```
 
 上面一段代码看着东西挺多，但其实做的事情挺简单：
@@ -197,7 +197,7 @@ __webpack_require__.e = function requireEnsure(chunkId) {
 
 ```javascript
 function jsonpScriptSrc(chunkId) {
-	return __webpack_require__.p + "" + ({}[chunkId]||chunkId) + ".bundlle.js"
+  return __webpack_require__.p + "" + ({}[chunkId]||chunkId) + ".bundlle.js"
 }
 ```
 
@@ -229,18 +229,18 @@ jsonpArray.push = webpackJsonpCallback;
 
 ```javascript
 function webpackJsonpCallback(data) {
- 	var chunkIds = data[0];
- 	var moreModules = data[1];
+  var chunkIds = data[0];
+  var moreModules = data[1];
 
   
- 	var moduleId, chunkId, i = 0, resolves = [];
- 	for(;i < chunkIds.length; i++) {
- 	  chunkId = chunkIds[i];
- 	  if(Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
+  var moduleId, chunkId, i = 0, resolves = [];
+  for(;i < chunkIds.length; i++) {
+    chunkId = chunkIds[i];
+    if(Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
       // 收集各模块的resolve方法，供后面统一处理
- 	    resolves.push(installedChunks[chunkId][0]);
- 	  }
- 	  installedChunks[chunkId] = 0; // 加载完成后，对应模块在installedChunks中的值为0
+      resolves.push(installedChunks[chunkId][0]);
+    }
+    installedChunks[chunkId] = 0; // 加载完成后，对应模块在installedChunks中的值为0
   }
   // 将加载的模块添加到modules对象上
   for(moduleId in moreModules) {
@@ -264,7 +264,7 @@ modules是外层函数的入参，这个不要忘了。
 
 ```javascript
 for(moduleId in moreModules) {
-	if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
+  if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
     modules[moduleId] = moreModules[moduleId]; // 将异步加载到的模块放到modules中
   }
 }
@@ -293,7 +293,7 @@ while(resolves.length) {
 
 ```javascript
 for(moduleId in moreModules) {
-	if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
+  if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
     modules[moduleId] = moreModules[moduleId]; // 将异步加载到的模块放到modules中
   }
 }
