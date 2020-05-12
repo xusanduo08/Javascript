@@ -94,7 +94,7 @@ index.bundle.js：
 
 
 
-从整体看打包后文件结构和都是同步加载时的打包文件结构差不多：都是一个立即执行函数，函数入参同样也是一个以文件路径为key，文件内容为值的对象（姑且称之为模块对象）；同样使用了`__webpack_require__(moduleId)`加载同步代码；同样有模块缓存`installedModules`。
+从整体看打包后文件结构和都是同步加载时的打包文件结构差不多：都是一个立即执行函数，函数入参同样也是一个以文件路径为key，文件内容为值的对象（姑且称之为**模块对象**）；同样使用了`__webpack_require__(moduleId)`加载同步代码；同样有模块缓存`installedModules`。
 
 也有一些不同点，比如，相比都是同步加载，使用异步加载的代码打包后文件内容要多一些，有一些方法在同步加载时没有（比如webpackJsonpCallback，jsonpScriptSrc）；需要同步加载的所有文件都打包在了一块，但需要异步加载的文件单独打包了出来（0.bundle.js）；对模块的加载状态进行了记录`installedChunks`。
 
@@ -190,7 +190,7 @@ __webpack_require__.e = function requireEnsure(chunkId) {
 
 1. 检查要加载的代码是否已经加载过，加载过则直接返回，否则继续往下走；
 
-2. 创建一个代表即将要加载的代码的promise，并将这promise存储到内存中后面会用到；
+2. 创建一个代表即将要加载的代码的promise，并将这个promise存储到内存中供后面使用；
 3. 接着就是创建script标签，设置script的一些包括src在内的属性，然后将scirpt标签append到head内，浏览器就会自动根据src去加载代码
 
 在设置加载路径也就是script的src属性时，用到了`jsonpScriptSrc(chunkId)`这个方法：
@@ -201,7 +201,7 @@ function jsonpScriptSrc(chunkId) {
 }
 ```
 
-方法很简单，就是根据传进来的chunkId生成对应的chunk路径，这里的`__webpack__require__.p`就是webpack设置中的`publicPath`。我们这个例子中没有设置`publicPath`，所以`src`值为`0.bundle.js`。
+方法很简单，就是根据传进来的chunkId生成对应的chunk路径，这里的`__webpack__require__.p`就是webpack配置中的`publicPath`。我们这个例子中没有设置`publicPath`，所以`src`值为`0.bundle.js`。
 
 所加载的0.bundle.js内容如下，也就是async.js打包后的内容：
 
@@ -225,23 +225,24 @@ var oldJsonpFunction = jsonpArray.push.bind(jsonpArray);
 jsonpArray.push = webpackJsonpCallback;
 ```
 
-所以`window.webpackJsonp.push`其实就是`webpackJsonpCallback()`方法，内容如下：
+所以`window.webpackJsonp.push`其实就是`webpackJsonpCallback()`方法，方法内容如下：
 
 ```javascript
 function webpackJsonpCallback(data) {
  	var chunkIds = data[0];
  	var moreModules = data[1];
 
-  // 将加载的模块添加到modules对象上
- 	// 调用各模块的resolve方法，然后继续执行回调
+  
  	var moduleId, chunkId, i = 0, resolves = [];
  	for(;i < chunkIds.length; i++) {
  	  chunkId = chunkIds[i];
  	  if(Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
+      // 收集各模块的resolve方法，供后面统一处理
  	    resolves.push(installedChunks[chunkId][0]);
  	  }
  	  installedChunks[chunkId] = 0; // 加载完成后，对应模块在installedChunks中的值为0
   }
+  // 将加载的模块添加到modules对象上
   for(moduleId in moreModules) {
     if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
       modules[moduleId] = moreModules[moduleId]; // 将异步加载到的模块放到modules中
@@ -298,7 +299,7 @@ for(moduleId in moreModules) {
 }
 ```
 
-既然放进去了，后面肯定会用到。
+既然放进去了，那肯定有用到的地方。
 
 回到index.bundle.js中，拖到代码最下面加载async.js部分：
 
@@ -317,5 +318,7 @@ if (window.show) {
 ![](../img/异步加载.jpeg)
 
 至此，整个异步代码加载完毕。
+
+![异步加载流程](../img/异步加载流程.jpg)
 
 一句话总结下就是：所谓的动态加载js，其实是通过script标签来实现的。
