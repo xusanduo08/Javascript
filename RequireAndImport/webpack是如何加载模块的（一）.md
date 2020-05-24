@@ -128,7 +128,9 @@ function (module, __webpack_exports__, __webpack_require__) {
 上面方法中先是执行了`__webpack_require__.r`：
 
 ```javascript
-// 给文件导出对象定义_esModule属性
+// 给文件导出对象定义_esModule属性并复制为true，
+// 同时通过修改Symbol.toStringTag属性
+// 将export对象的toString()方法返回值设置为[object Module]
 __webpack_require__.r = function (exports) {
   if (typeof Symbol !== 'undefined' && Symbol.toStringTag) {
     Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
